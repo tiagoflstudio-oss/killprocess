@@ -1,0 +1,42 @@
+# 🚀 Killprocess - Otimizador Supremo do Windows para Gamers
+
+O **Killprocess** é um aplicativo projetado para desativar serviços e processos em segundo plano do Windows, liberando o máximo de CPU, Memória RAM e reduzindo a latência para jogos.
+
+---
+
+## 🎚️ Níveis de Otimização (7 Níveis Completos)
+
+O sistema de otimização foi expandido para **7 níveis**, permitindo que o usuário escolha a agressividade com que os processos serão encerrados.
+
+### 🟢 Nível 1: Aplicativos & Bloatwares
+Focado em fechar softwares em segundo plano que consomem RAM e CPU.
+- **Exemplos:** Google Chrome, MS Edge, Discord, OneDrive, WhatsApp, Teams, Skype.
+
+### 🟡 Nível 2: Impressão & Manutenção
+Desativa serviços que consomem recursos de I/O em segundo plano.
+- **Exemplos:** Spooler de impressão, Windows Search (Indexador), SysMain (Superfetch), Hyper-V.
+
+### 🟠 Nível 3: Telemetria & Rastreamento
+Desativa rastreamento, envio de dados de diagnóstico e manutenção de índice.
+- **Exemplos:** DiagTrack (Telemetria Microsoft), PimIndexMaintenanceSvc, UserDataSvc.
+
+### 🔴 Nível 4: Xbox & Conexões Secundárias
+Focado em serviços de console e periféricos que gamers de PC competitivos não utilizam.
+- **Exemplos:** Autenticação do Xbox Live, Xbox Game Save, Bluetooth, NFC, Telefonia e Sensores.
+
+### 🌐 Nível 5: Redes & Streaming
+Impede o consumo de rede e banda em segundo plano para máxima estabilidade e menor ping nos jogos.
+- **Exemplos:** Compartilhamento de Internet (ICS), Geolocalização, Mapas Baixados, Controles dos Pais, Modo Demonstração de Varejo.
+
+### 🔒 Nível 6: Segurança & Criptografia
+Para jogadores hardcore que querem máxima performance na CPU.
+- **Exemplos:** Gerenciador de Credenciais, Cartão Inteligente, Windows Insider Service, Registro Remoto, Biometria.
+
+### 👑 Nível 7: Modo Deus (God Mode)
+O nível supremo de otimização barebone.
+- **Ações:** Força a seleção de absolutamente todas as checkboxes da interface visual e desativa unconditionally todos os processos e serviços mapeados no programa.
+
+---
+
+## ⚠️ Plano de Contingência e Segurança
+O programa sempre cria um **Ponto de Restauração** do Windows e salva o backup dos serviços que estavam ativos em `active_services_backup.txt`. Um único clique no botão de Restauração reativa os padrões do Windows.
