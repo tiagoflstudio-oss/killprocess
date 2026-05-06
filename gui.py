@@ -236,9 +236,59 @@ class PremiumKillprocessApp(ctk.CTk):
             if step < 30:
                 splash.after(100, lambda: animate_k_minimal(step + 1))
             else:
-                splash.after(500, lambda: [splash.destroy(), self.deiconify(), self.log(">>> SISTEMA PRONTO.", "success")])
+                splash.after(500, lambda: [splash.destroy(), self.show_login_gate()]) # CHAMA O LOGIN
 
         animate_k_minimal()
+
+    def show_login_gate(self):
+        """
+        Janela de Verificação de Licença (Apex Access Gate)
+        """
+        gate = ctk.CTkToplevel(self)
+        gate.title("APEX ACCESS GATE")
+        gate.attributes("-topmost", True)
+        
+        # Centralizar
+        w, h = 400, 250
+        sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
+        gate.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
+        gate.overrideredirect(True)
+        gate.configure(fg_color=C["bg"])
+
+        # Border Glow
+        frame = ctk.CTkFrame(gate, fg_color=C["card"], border_width=1, border_color=C["cyan"], corner_radius=10)
+        frame.pack(fill="both", expand=True, padx=2, pady=2)
+
+        ctk.CTkLabel(frame, text="🛡️ APEX SECURITY SYSTEM", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(pady=(20, 5))
+        ctk.CTkLabel(frame, text="INSIRA SUA CHAVE DE ACESSO", font=ctk.CTkFont("Segoe UI", 13, "bold"), text_color=C["text"]).pack(pady=5)
+
+        key_entry = ctk.CTkEntry(frame, width=300, height=40, font=("Consolas", 14), 
+                                 placeholder_text="XXXX-XXXX-XXXX", justify="center",
+                                 fg_color="#0F172A", border_color=C["border"])
+        key_entry.pack(pady=15)
+        key_entry.focus_set()
+
+        def validate():
+            # A SUA SENHA PERSONALIZADA:
+            SECRET_KEY = "BOCAMOLE"
+            
+            if key_entry.get().strip().upper() == SECRET_KEY:
+                self.log(">>> ACESSO AUTORIZADO. BEM-VINDO, OPERADOR.", "success")
+                gate.destroy()
+                self.deiconify() # Abre o HUD Original
+            else:
+                import winsound
+                winsound.MessageBeep(winsound.MB_ICONHAND)
+                key_entry.configure(border_color=C["danger"])
+                self.log(">>> ACESSO NEGADO: CHAVE INVÁLIDA.", "error")
+
+        btn_verify = ctk.CTkButton(frame, text="AUTENTICAR", font=ctk.CTkFont("Segoe UI", 12, "bold"),
+                                   fg_color=C["cyan"], text_color="#000000", hover_color=C["accent"],
+                                   height=35, command=validate)
+        btn_verify.pack(pady=5)
+
+        # Atalho Enter
+        gate.bind("<Return>", lambda e: validate())
 
     def __init__(self):
         super().__init__()
@@ -462,17 +512,17 @@ class PremiumKillprocessApp(ctk.CTk):
         add_btn.pack(pady=10)
 
         # --- Versão no Rodapé ---
-        ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"APEX HUD v{VERSION}", 
+        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"APEX HUD v{VERSION}", 
                                font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"])
-        ver_lbl.pack(side="bottom", pady=10)
+        self.ver_lbl.pack(side="bottom", pady=10)
 
         # Botão de Update no rodapé da sidebar
-        update_btn = ctk.CTkButton(self.sidebar_frame, text="🔄 CHECK UPDATE", 
+        self.update_btn = ctk.CTkButton(self.sidebar_frame, text="🔄 CHECK UPDATE", 
                                    font=ctk.CTkFont("Segoe UI", 8, "bold"),
                                    fg_color="transparent", border_width=1, border_color=C["border"],
                                    height=20, corner_radius=4, text_color=C["muted"],
                                    hover_color=C["card"], command=self.check_for_updates)
-        update_btn.pack(side="bottom", pady=(0, 2), padx=20, fill="x")
+        self.update_btn.pack(side="bottom", pady=(0, 2), padx=20, fill="x")
 
         # Área de Rodapé: Ponto de Restauração
         bottom_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
@@ -2019,7 +2069,8 @@ del "%~f0"
             except Exception as e:
                 self.log(f"⚠️ [Update System]: ERRO DURANTE A ATUALIZAÇÃO: {e}", "error")
 
-        threading.Thread(target=run_update, daemon=True).start()
+    def add_custom_shortcut(self):
+        from tkinter import filedialog
         path = filedialog.askopenfilename(title="Selecionar Executável", filetypes=[("Executáveis", "*.exe")])
         if path:
             name = os.path.basename(path).replace(".exe", "").capitalize()
