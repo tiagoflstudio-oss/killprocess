@@ -405,9 +405,9 @@ class PremiumKillprocessApp(ctk.CTk):
         self.sidebar_frame.pack_propagate(False)
         self._build_sidebar()
         
-        # Content (Área dinâmica)
+        # Content (Área dinâmica - Ajustada para encostar no monitor)
         self.content_frame = ctk.CTkFrame(self.main_container, fg_color=C["bg"], corner_radius=0)
-        self.content_frame.pack(side="left", fill="both", expand=True, padx=20, pady=20)
+        self.content_frame.pack(side="left", fill="both", expand=True, padx=(20, 2), pady=20)
         self._build_content()
 
         # Configurações Adicionais
