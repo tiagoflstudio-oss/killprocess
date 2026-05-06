@@ -1994,28 +1994,27 @@ class PremiumKillprocessApp(ctk.CTk):
         threading.Thread(target=pulse, daemon=True).start()
 
     def check_for_updates(self):
-        self.log("🌐 [Update System]: VERIFICANDO NOVAS VERSÕES...", "info")
+        self.log("🌐 [Update System]: CONSULTANDO SERVIDOR APEX...", "info")
         
+        # URL RAW DO SEU MANIFESTO NO GITHUB
+        MANIFEST_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json"
+
         def run_check():
             import urllib.request
             import json
             try:
-                # Simulação ou URL Real
-                # Para teste, vamos simular uma resposta do servidor
-                # response = urllib.request.urlopen(UPDATE_URL).read()
-                # data = json.loads(response)
-                
-                # MOCK PARA DEMONSTRAÇÃO
-                data = {"version": "2.0.1", "url": "#", "changelog": "Correções na Inteligência"}
+                # Consulta real ao seu GitHub
+                response = urllib.request.urlopen(MANIFEST_URL).read()
+                data = json.loads(response)
                 
                 latest = data["version"]
                 if latest > VERSION:
                     self.log(f"🚀 [Update System]: NOVA VERSÃO DISPONÍVEL: v{latest}!", "success")
-                    self.log(f"🚀 [Update System]: Changelog: {data['changelog']}", "info")
+                    self.log(f"🚀 [Update System]: Changelog: {data.get('changelog', 'Nenhuma nota informada')}", "info")
                     
                     # Perguntar ao usuário
                     from tkinter import messagebox
-                    if messagebox.askyesno("Apex Update", f"Nova versão v{latest} disponível!\n\n{data['changelog']}\n\nDeseja baixar e instalar agora?"):
+                    if messagebox.askyesno("Apex Update", f"Nova versão v{latest} disponível!\n\n{data.get('changelog', '')}\n\nDeseja baixar e instalar agora?"):
                         self.perform_update(data["url"])
                 else:
                     self.log("✅ [Update System]: SEU HUD ESTÁ NA VERSÃO MAIS RECENTE.", "success")
