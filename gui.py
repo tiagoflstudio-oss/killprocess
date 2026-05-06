@@ -652,30 +652,23 @@ class PremiumKillprocessApp(ctk.CTk):
             text_color=C["accent"], fg_color="#051408", corner_radius=6, padx=10, pady=3)
         self.status_val_lbl.pack(side="right")
 
-        # ── LINHA 2: Seletor de Níveis + Stats + Sistema ─────────────
-        row2 = ctk.CTkFrame(tab, fg_color="transparent")
-        row2.pack(fill="x", pady=(0, 8))
-        row2.grid_columnconfigure(0, weight=2) # Níveis
-        row2.grid_columnconfigure((1, 2, 3), weight=1) # 3 Colunas de Métricas uniformes
-
-        # Card Seletor de Níveis (Mais Largo)
-        lvl_card = ctk.CTkFrame(row2, fg_color=C["card"], border_width=1,
+        # ── LINHA 2: Seletor de Níveis (PANORÂMICO / FULL WIDTH) ────────
+        lvl_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1,
                                  border_color=C["border"], corner_radius=15)
-        lvl_card.grid(row=0, column=0, padx=(0, 10), sticky="nsew")
-        row2.grid_columnconfigure(0, weight=4) # Prioridade total para os níveis
+        lvl_card.pack(fill="x", pady=(0, 10))
 
-        ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO",
+        ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO (STATUS DO KERNEL)",
                      font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                     text_color=C["cyan"]).pack(anchor="w", padx=12, pady=(8, 4))
+                     text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(8, 4))
 
         self.lights_frame = ctk.CTkFrame(lvl_card, fg_color="transparent")
-        self.lights_frame.pack(fill="x", padx=15, pady=(0, 4))
+        self.lights_frame.pack(fill="x", padx=15, pady=(0, 6))
 
         self.level_indicators = {}
         self.level_checkboxes_dashboard = {}
 
         self.level_desc_lbl = ctk.CTkLabel(
-            lvl_card, text="Passe o mouse sobre um nível para ver detalhes.",
+            lvl_card, text="Passe o mouse sobre um nível para ver detalhes da otimização.",
             font=ctk.CTkFont("Segoe UI", 11), text_color=C["muted"])
         self.level_desc_lbl.pack(anchor="w", padx=15, pady=(0, 10))
 
@@ -683,171 +676,133 @@ class PremiumKillprocessApp(ctk.CTk):
 
         levels_data = [
             (1, "N1", "Apps", "#00FF88", "Apps em segundo plano."),
-            (2, "N2", "Print", "#00FFB2", "Serviços de impressora e fax."),
-            (3, "N3", "Telemetria", "#FFFF00", "Coleta de dados e diagnósticos."),
+            (2, "N2", "Print", "#00FFB2", "Impressora e manutenção."),
+            (3, "N3", "Telemetria", "#FFFF00", "Telemetria e diagnósticos."),
             (4, "N4", "Xbox/BT", "#FF8000", "Xbox Live e Bluetooth."),
-            (5, "N5", "Net/Maps", "#FF0055", "Compartilhamento e mapas."),
-            (6, "N6", "Crypto", "#00CCFF", "Segurança local e biometria."),
-            (7, "N7", "God Mode", "#FFD700", "Modo Deus: Performance Suprema."),
-            (8, "N8", "Polish", "#00FF88", "Polish: Serviços fantasmas seguros."),
-            (9, "N9", "Engine", "#C084FC", "Deep Engine: Otimização de Sistema."),
-            (10, "N10", "Security", "#EF4444", "⚠️ AVISO: Desativa Windows Defender.")
+            (5, "N5", "Net/Maps", "#FF0055", "Rede e mapas offline."),
+            (6, "N6", "Crypto", "#00CCFF", "Segurança e biometria."),
+            (7, "N7", "God Mode", "#FFD700", "Modo Deus: Performance Gamer."),
+            (8, "N8", "Polish", "#00FF88", "Polish: Serviços fantasmas."),
+            (9, "N9", "Engine", "#C084FC", "Deep Engine: Otimização de núcleo."),
+            (10, "N10", "Security", "#EF4444", "⚠️ AVISO: Desativa Defender.")
         ]
         
         row_idx = 0
         col_idx = 0
         for num, lvl_id, name, color, desc in levels_data:
             f = ctk.CTkFrame(self.lights_frame, fg_color="transparent")
-            f.grid(row=row_idx, column=col_idx, sticky="w", padx=3, pady=3)
-            
+            f.grid(row=row_idx, column=col_idx, sticky="w", padx=4, pady=2)
             cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                                  fg_color=color, hover_color=color, width=18,
+                                  fg_color=color, hover_color=color, width=16,
                                   command=lambda d=desc: update_desc(d))
-            if num <= 8: cb.select() # Nível 9 e 10 começam desmarcados por segurança
+            if num <= 8: cb.select()
             cb.pack(side="left", padx=(0, 2))
             cb.bind("<Enter>", lambda e, d=desc: update_desc(d))
-            
-            # Mapeamento dinâmico
             full_key = list(SERVICES_MAP.keys())[num-1]
             self.level_checkboxes_dashboard[full_key] = cb
             self.level_indicators[num] = {"circle": cb, "cb": cb, "color": color}
-            
             col_idx += 1
-            if col_idx > 2: # 3 Colunas para caber os 10 níveis
+            if col_idx > 4: 
                 col_idx = 0
                 row_idx += 1
+        self.lights_frame.grid_columnconfigure((0,1,2,3,4), weight=1)
 
-        # --- COLUNA DE MÉTRICAS (Compacta e Arredondada) ---
-        m_frame = ctk.CTkFrame(row2, fg_color="transparent")
-        m_frame.grid(row=0, column=1, sticky="nsew")
-        row2.grid_columnconfigure(1, weight=3) # Espaço para métricas
-        
+        # ── LINHA 3: Métricas de Telemetria (Grade 2x3 Simétrica) ──────
+        m_frame = ctk.CTkFrame(tab, fg_color="transparent")
+        m_frame.pack(fill="x", pady=(0, 10))
         def add_m_card(title, attr, color, r, c):
             card = ctk.CTkFrame(m_frame, fg_color=C["card"], border_width=1, 
                                  border_color=C["border"], corner_radius=15)
             card.grid(row=r, column=c, padx=3, pady=3, sticky="nsew")
-            
             ctk.CTkLabel(card, text=title, font=ctk.CTkFont("Segoe UI", 8, "bold"), 
                          text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(6, 0))
-            
-            lbl = ctk.CTkLabel(card, text="--", font=ctk.CTkFont("Segoe UI", 14, "bold"), text_color=C["text"])
+            lbl = ctk.CTkLabel(card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
             lbl.pack(anchor="w", padx=10)
             setattr(self, attr, lbl)
-            
             pb = ctk.CTkProgressBar(card, height=4, progress_color=color, fg_color="#1E2631")
             pb.pack(fill="x", padx=10, pady=(0, 6))
             pb.set(0.2)
             setattr(self, attr + "_pb", pb)
 
-        # Grid 2x3 de Métricas
         add_m_card("RAM EM USO", "ram_lbl", "#10B981", 0, 0)
         add_m_card("GPU LOAD", "gpu_lbl", "#F43F5E", 0, 1)
         add_m_card("NETWORK", "net_lbl", "#C084FC", 0, 2)
         add_m_card("CPU USAGE", "cpu_lbl", C["accent"], 1, 0)
         add_m_card("DISK USAGE", "disk_lbl", "#2DD4BF", 1, 1)
         add_m_card("PROCESSOS", "proc_lbl", "#3B82F6", 1, 2)
-        
         m_frame.grid_columnconfigure((0, 1, 2), weight=1)
         m_frame.grid_rowconfigure((0, 1), weight=1)
 
-
-        # ── LINHA 3: Botões de Ação + Radar ─────────────────────────────
+        # ── LINHA 4: Botões de Ação + Radar ─────────────────────────────
         row3 = ctk.CTkFrame(tab, fg_color="transparent")
         row3.pack(fill="x", pady=(0, 4))
         row3.grid_columnconfigure(0, weight=3)
         row3.grid_columnconfigure(1, weight=1)
 
-        # Painel de Ações
         act = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1,
                             border_color=C["border"], corner_radius=10)
         act.grid(row=0, column=0, padx=(0, 6), sticky="nsew")
-
         ctk.CTkLabel(act, text="▌ AÇÕES RÁPIDAS (ONE-CLICK)",
                      font=ctk.CTkFont("Segoe UI", 9, "bold"),
                      text_color=C["cyan"]).pack(anchor="w", padx=14, pady=(10, 8))
 
-        # Grid de Botões Quadrados no Dash (Simétrico e Uniforme)
         btn_grid = ctk.CTkFrame(act, fg_color="transparent")
         btn_grid.pack(fill="both", expand=True, padx=10, pady=(0, 10))
-        # uniform="buttons" garante que as colunas tenham EXATAMENTE a mesma largura
         btn_grid.grid_columnconfigure((0, 1, 2), weight=1, uniform="buttons")
         btn_grid.grid_rowconfigure(0, weight=1)
 
-        # Botão OTIMIZAR TUDO
         self.full_opt_btn = ctk.CTkButton(
-            btn_grid, text="🚀\nOTIMIZAR TUDO",
-            fg_color="#0D47A1", hover_color="#1565C0",
-            font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=100, corner_radius=10, text_color="white",
+            btn_grid, text="🚀\nOTIMIZAR TUDO", fg_color="#0D47A1", hover_color="#1565C0",
+            font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10,
             command=self.start_full_optimization)
         self.full_opt_btn.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
 
-        # GOD MODE
         self.god_mode_btn = ctk.CTkButton(
-            btn_grid, text="👑\nGOD MODE",
-            fg_color=C["gold"], hover_color="#C8A800",
-            font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=100, corner_radius=10, text_color="#0A0A0A",
+            btn_grid, text="👑\nGOD MODE", fg_color=C["gold"], hover_color="#C8A800",
+            font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10, text_color="#0A0A0A",
             command=self.start_god_mode)
         self.god_mode_btn.grid(row=0, column=1, padx=8, pady=8, sticky="nsew")
 
-        # Gamer Custom
         self.optimize_selection_btn = ctk.CTkButton(
-            btn_grid, text="⚡\nGAMER CUSTOM",
-            fg_color="#1E2631", hover_color="#3B82F6",
-            border_width=1, border_color="#3B82F6",
-            font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=100, corner_radius=10, text_color=C["text"],
+            btn_grid, text="⚡\nGAMER CUSTOM", fg_color="#1E2631", hover_color="#3B82F6",
+            border_width=1, border_color="#3B82F6", font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10,
             command=self.start_optimize_selection)
         self.optimize_selection_btn.grid(row=0, column=2, padx=8, pady=8, sticky="nsew")
 
-        # Atalhos rápidos (Mais visíveis e destacados)
         shortcuts_row = ctk.CTkFrame(act, fg_color="transparent")
         shortcuts_row.pack(fill="x", padx=10, pady=(0, 8))
         shortcuts_row.grid_columnconfigure((0, 1, 2), weight=1)
 
         self.btn_ab_dash = ctk.CTkButton(
-            shortcuts_row, text="🚀 Auto Boost", fg_color="#111827",
-            hover_color="#10B981", border_width=1, border_color="#10B981",
-            font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
+            shortcuts_row, text="🚀 Auto Boost", fg_color="#111827", hover_color="#10B981",
+            border_width=1, border_color="#10B981", font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
             command=self.toggle_autoboost)
         self.btn_ab_dash.grid(row=0, column=0, padx=3, sticky="nsew")
 
         self.btn_maint_dash = ctk.CTkButton(
-            shortcuts_row, text="🛠️ Executar Tudo", fg_color="#111827",
-            hover_color="#10B981", border_width=1, border_color="#10B981",
-            font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
+            shortcuts_row, text="🛠️ Executar Tudo", fg_color="#111827", hover_color="#10B981",
+            border_width=1, border_color="#10B981", font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
             command=lambda: threading.Thread(target=self.run_all_maintenance, daemon=True).start())
         self.btn_maint_dash.grid(row=0, column=1, padx=3, sticky="nsew")
 
         self.btn_shell_dash = ctk.CTkButton(
-            shortcuts_row, text="👑 Shell Mode", fg_color="#111827",
-            hover_color=C["gold"], border_width=1, border_color=C["gold"],
-            font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
+            shortcuts_row, text="👑 Shell Mode", fg_color="#111827", hover_color=C["gold"],
+            border_width=1, border_color=C["gold"], font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
             command=self.toggle_gold_mode_explorer)
         self.btn_shell_dash.grid(row=0, column=2, padx=3, sticky="nsew")
 
         self.restore_btn = ctk.CTkButton(
-            act, text="🔄  RESTAURAR PADRÕES DO WINDOWS",
-            fg_color="#0F172A", hover_color="#EF4444",
-            border_width=1, border_color="#1E293B",
-            font=ctk.CTkFont("Segoe UI", 9, "bold"),
-            height=30, corner_radius=6, text_color=C["muted"],
-            command=self.start_restoration)
+            act, text="🔄  RESTAURAR PADRÕES DO WINDOWS", fg_color="#0F172A", hover_color="#EF4444",
+            border_width=1, border_color="#1E293B", font=ctk.CTkFont("Segoe UI", 9, "bold"), height=30, corner_radius=6,
+            text_color=C["muted"], command=self.start_restoration)
         self.restore_btn.pack(fill="x", padx=14, pady=(2, 10))
 
-        # Card Radar (Movido para Row 3 do Dash)
-        radar_card = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1,
-                                   border_color=C["border"], corner_radius=10)
+        radar_card = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
         radar_card.grid(row=0, column=1, sticky="nsew")
-
-        ctk.CTkLabel(radar_card, text="▌ PERFORMANCE RADAR",
-                     font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                     text_color=C["cyan"]).pack(anchor="w", padx=12, pady=(10, 4))
-
-        self.radar_canvas = ctk.CTkCanvas(
-            radar_card, bg=C["card"], highlightthickness=0, width=240, height=120)
+        ctk.CTkLabel(radar_card, text="▌ PERFORMANCE RADAR", font=ctk.CTkFont("Segoe UI", 9, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=12, pady=(10, 4))
+        self.radar_canvas = ctk.CTkCanvas(radar_card, bg=C["card"], highlightthickness=0, width=240, height=120)
         self.radar_canvas.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        self.draw_radar_chart()
         self.draw_radar_chart()
 
         # ── LINHA 4: Manutenção Avançada (Central de Comando) ────────────────
