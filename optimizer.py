@@ -24,7 +24,8 @@ def run_cmd(cmd):
     if DRY_RUN:
         return f"[SIMULAÇÃO]: Executando comando -> {cmd}"
     try:
-        result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
+        CREATE_NO_WINDOW = 0x08000000
+        result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         return result.stdout.strip()
     except Exception as e:
         return str(e)

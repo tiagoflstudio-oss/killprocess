@@ -2062,7 +2062,8 @@ del "%~f0"
 
                 # 3. Lançar o updater e fechar
                 self.log("🚀 [Update System]: REINICIANDO PARA APLICAR MUDANÇAS...", "info")
-                subprocess.Popen(["updater.bat"], shell=True)
+                CREATE_NO_WINDOW = 0x08000000
+                subprocess.Popen(["updater.bat"], shell=True, creationflags=CREATE_NO_WINDOW)
                 self.quit()
                 sys.exit()
 
@@ -2080,9 +2081,10 @@ del "%~f0"
 
     def launch_shortcut(self, app_name, custom_path=None):
         import os, subprocess
+        CREATE_NO_WINDOW = 0x08000000
         if custom_path:
             if os.path.exists(custom_path):
-                subprocess.Popen([custom_path])
+                subprocess.Popen([custom_path], creationflags=CREATE_NO_WINDOW)
                 self.log(f">>> LANÇANDO {app_name.upper()}...", "success")
                 return
         
@@ -2105,9 +2107,9 @@ del "%~f0"
         for path in paths.get(app_name, []):
             if os.path.exists(path):
                 if app_name == "Discord":
-                    subprocess.Popen([path, "--processStart", "Discord.exe"])
+                    subprocess.Popen([path, "--processStart", "Discord.exe"], creationflags=CREATE_NO_WINDOW)
                 else:
-                    subprocess.Popen([path])
+                    subprocess.Popen([path], creationflags=CREATE_NO_WINDOW)
                 self.log(f">>> LANÇANDO {app_name.upper()}...", "success")
                 found = True
                 break
