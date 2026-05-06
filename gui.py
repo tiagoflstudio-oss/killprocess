@@ -658,10 +658,11 @@ class PremiumKillprocessApp(ctk.CTk):
         row2.grid_columnconfigure(0, weight=2) # Níveis
         row2.grid_columnconfigure((1, 2, 3), weight=1) # 3 Colunas de Métricas uniformes
 
-        # Card Seletor de Níveis
+        # Card Seletor de Níveis (Mais Largo)
         lvl_card = ctk.CTkFrame(row2, fg_color=C["card"], border_width=1,
-                                 border_color=C["border"], corner_radius=10)
-        lvl_card.grid(row=0, column=0, padx=(0, 6), sticky="nsew", ipady=4)
+                                 border_color=C["border"], corner_radius=15)
+        lvl_card.grid(row=0, column=0, padx=(0, 10), sticky="nsew")
+        row2.grid_columnconfigure(0, weight=4) # Prioridade total para os níveis
 
         ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO",
                      font=ctk.CTkFont("Segoe UI", 9, "bold"),
@@ -716,68 +717,39 @@ class PremiumKillprocessApp(ctk.CTk):
                 col_idx = 0
                 row_idx += 1
 
-        # --- COLUNA 1: RAM & CPU ---
-        c1 = ctk.CTkFrame(row2, fg_color="transparent")
-        c1.grid(row=0, column=1, padx=3, sticky="nsew")
-        c1.grid_rowconfigure((0, 1), weight=1)
+        # --- COLUNA DE MÉTRICAS (Compacta e Arredondada) ---
+        m_frame = ctk.CTkFrame(row2, fg_color="transparent")
+        m_frame.grid(row=0, column=1, sticky="nsew")
+        row2.grid_columnconfigure(1, weight=3) # Espaço para métricas
+        
+        def add_m_card(title, attr, color, r, c):
+            card = ctk.CTkFrame(m_frame, fg_color=C["card"], border_width=1, 
+                                 border_color=C["border"], corner_radius=15)
+            card.grid(row=r, column=c, padx=3, pady=3, sticky="nsew")
+            
+            ctk.CTkLabel(card, text=title, font=ctk.CTkFont("Segoe UI", 8, "bold"), 
+                         text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(6, 0))
+            
+            lbl = ctk.CTkLabel(card, text="--", font=ctk.CTkFont("Segoe UI", 14, "bold"), text_color=C["text"])
+            lbl.pack(anchor="w", padx=10)
+            setattr(self, attr, lbl)
+            
+            pb = ctk.CTkProgressBar(card, height=4, progress_color=color, fg_color="#1E2631")
+            pb.pack(fill="x", padx=10, pady=(0, 6))
+            pb.set(0.2)
+            setattr(self, attr + "_pb", pb)
 
-        ram_card = ctk.CTkFrame(c1, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        ram_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
-        ctk.CTkLabel(ram_card, text="RAM EM USO", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.ram_val_lbl = ctk.CTkLabel(ram_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.ram_val_lbl.pack(anchor="w", padx=10)
-        self.ram_pb = ctk.CTkProgressBar(ram_card, height=4, progress_color="#10B981", fg_color="#1E2631")
-        self.ram_pb.pack(fill="x", padx=10, pady=(0, 8))
+        # Grid 2x3 de Métricas
+        add_m_card("RAM EM USO", "ram_lbl", "#10B981", 0, 0)
+        add_m_card("GPU LOAD", "gpu_lbl", "#F43F5E", 0, 1)
+        add_m_card("NETWORK", "net_lbl", "#C084FC", 0, 2)
+        add_m_card("CPU USAGE", "cpu_lbl", C["accent"], 1, 0)
+        add_m_card("DISK USAGE", "disk_lbl", "#2DD4BF", 1, 1)
+        add_m_card("PROCESSOS", "proc_lbl", "#3B82F6", 1, 2)
+        
+        m_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        m_frame.grid_rowconfigure((0, 1), weight=1)
 
-        cpu_card = ctk.CTkFrame(c1, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        cpu_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
-        ctk.CTkLabel(cpu_card, text="CPU USAGE", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_cpu_lbl = ctk.CTkLabel(cpu_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_cpu_lbl.pack(anchor="w", padx=10)
-        self.dash_cpu_pb = ctk.CTkProgressBar(cpu_card, height=4, progress_color=C["accent"], fg_color="#1E2631")
-        self.dash_cpu_pb.pack(fill="x", padx=10, pady=(0, 8))
-
-        # --- COLUNA 2: GPU & DISK ---
-        c2 = ctk.CTkFrame(row2, fg_color="transparent")
-        c2.grid(row=0, column=2, padx=3, sticky="nsew")
-        c2.grid_rowconfigure((0, 1), weight=1)
-
-        gpu_card = ctk.CTkFrame(c2, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        gpu_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
-        ctk.CTkLabel(gpu_card, text="GPU LOAD", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_gpu_lbl = ctk.CTkLabel(gpu_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_gpu_lbl.pack(anchor="w", padx=10)
-        self.dash_gpu_pb = ctk.CTkProgressBar(gpu_card, height=4, progress_color="#F43F5E", fg_color="#1E2631")
-        self.dash_gpu_pb.pack(fill="x", padx=10, pady=(0, 8))
-
-        disk_card = ctk.CTkFrame(c2, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        disk_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
-        ctk.CTkLabel(disk_card, text="DISK USAGE", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_disk_lbl = ctk.CTkLabel(disk_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_disk_lbl.pack(anchor="w", padx=10)
-        self.dash_disk_pb = ctk.CTkProgressBar(disk_card, height=4, progress_color="#2DD4BF", fg_color="#1E2631")
-        self.dash_disk_pb.pack(fill="x", padx=10, pady=(0, 8))
-
-        # --- COLUNA 3: NET & PROC ---
-        c3 = ctk.CTkFrame(row2, fg_color="transparent")
-        c3.grid(row=0, column=3, padx=(3, 0), sticky="nsew")
-        c3.grid_rowconfigure((0, 1), weight=1)
-
-        net_card = ctk.CTkFrame(c3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        net_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
-        ctk.CTkLabel(net_card, text="NETWORK", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_net_lbl = ctk.CTkLabel(net_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_net_lbl.pack(anchor="w", padx=10)
-        self.dash_net_pb = ctk.CTkProgressBar(net_card, height=4, progress_color="#A855F7", fg_color="#1E2631")
-        self.dash_net_pb.pack(fill="x", padx=10, pady=(0, 8))
-
-        proc_card = ctk.CTkFrame(c3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        proc_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
-        ctk.CTkLabel(proc_card, text="PROCESSOS", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.proc_val_lbl = ctk.CTkLabel(proc_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.proc_val_lbl.pack(anchor="w", padx=10)
-        self.proc_pb = ctk.CTkProgressBar(proc_card, height=4, progress_color="#3B82F6", fg_color="#1E2631")
-        self.proc_pb.pack(fill="x", padx=10, pady=(0, 8))
 
         # ── LINHA 3: Botões de Ação + Radar ─────────────────────────────
         row3 = ctk.CTkFrame(tab, fg_color="transparent")
