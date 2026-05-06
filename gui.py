@@ -26,7 +26,7 @@ def resource_path(relative_path):
 # ---
 # PALETA DE CORES APEX HUD
 # ---
-VERSION = "2.1.0" # Versão Atual
+VERSION = "2.0.9" # Versão para Teste de Update (GitHub está em 2.1.0)
 UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json" 
 
 C = {
@@ -2216,7 +2216,9 @@ del "%~f0"
                 sys.exit()
 
             except Exception as e:
-                self.log(f"⚠️ [Update System]: ERRO DURANTE A ATUALIZAÇÃO: {e}", "error")
+                self.log(f"⚠️ [Update System]: ERRO AO BAIXAR DE {download_url}", "error")
+                self.log(f"⚠️ Detalhe do Erro: {e}", "error")
+
 
     def add_custom_shortcut(self):
         from tkinter import filedialog
@@ -2755,6 +2757,39 @@ del "%~f0"
             self.clear_log_btn.configure(text_color=C["muted"])
         self.after(600, self.blink_clear_btn)
 
+    # --- SYSTEM TRAY (SEGUNDO PLANO) ---
+    def create_tray_icon(self):
+        try:
+            icon_p = resource_path("assets/icon.png")
+            if not os.path.exists(icon_p): return
+            
+            image = Image.open(icon_p)
+            menu = pystray.Menu(
+                item('Abrir Killprocess', self.show_window, default=True),
+                item('Sair Completamente', self.quit_app)
+            )
+            self.tray_icon = pystray.Icon("killprocess", image, "Killprocess Sapphire", menu)
+            
+            # Rodar tray em thread separada
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
+        except Exception as e:
+            print(f"Erro ao criar tray icon: {e}")
+
+    def hide_window(self):
+        self.withdraw()
+        self.log("💡 Killprocess rodando em segundo plano.", "info")
+
+    def show_window(self):
+        self.deiconify()
+        self.state('normal')
+        self.focus_force()
+
+    def quit_app(self):
+        if self.tray_icon:
+            self.tray_icon.stop()
+        self.destroy()
+        sys.exit(0)
+
 # =====================================================================
 # 🛡️ Sistema de Backup e Segurança
 # =====================================================================
@@ -2873,38 +2908,6 @@ def optimize_tcp(log_func):
         run_cmd(cmd)
     log_func("✅ Rede TCP otimizada!")
 
-    # --- SYSTEM TRAY (SEGUNDO PLANO) ---
-    def create_tray_icon(self):
-        try:
-            icon_p = resource_path("assets/icon.png")
-            if not os.path.exists(icon_p): return
-            
-            image = Image.open(icon_p)
-            menu = pystray.Menu(
-                item('Abrir Killprocess', self.show_window, default=True),
-                item('Sair Completamente', self.quit_app)
-            )
-            self.tray_icon = pystray.Icon("killprocess", image, "Killprocess Sapphire", menu)
-            
-            # Rodar tray em thread separada
-            threading.Thread(target=self.tray_icon.run, daemon=True).start()
-        except Exception as e:
-            print(f"Erro ao criar tray icon: {e}")
-
-    def hide_window(self):
-        self.withdraw()
-        self.log("💡 Killprocess rodando em segundo plano.", "info")
-
-    def show_window(self):
-        self.deiconify()
-        self.state('normal')
-        self.focus_force()
-
-    def quit_app(self):
-        if self.tray_icon:
-            self.tray_icon.stop()
-        self.destroy()
-        sys.exit(0)
 
 if __name__ == "__main__":
     if not is_admin():

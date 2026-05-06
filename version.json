@@ -2,5 +2,5 @@
   "version": "2.1.0",
   "release_notes": "Apex HUD v2.1.0 - KERNEL EDITION. Adicionado Kernel Engine (MSI Mode, CPU Scheduler 0x26, Network Throttling Fix, VBS Disable). Layout otimizado para 768p.",
   "date": "2026-05-06",
-  "url": "https://github.com/tiagoflstudio-oss/killprocess/releases/latest/download/Killprocess_Sapphire.exe"
+  "url": "https://github.com/tiagoflstudio-oss/killprocess/raw/main/dist/Killprocess_Sapphire.exe"
 }
