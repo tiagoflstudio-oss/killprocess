@@ -26,7 +26,7 @@ def resource_path(relative_path):
 # ---
 # PALETA DE CORES APEX HUD
 # ---
-VERSION = "2.0.9" # Versão para Teste de Update (GitHub está em 2.1.0)
+VERSION = "2.1.0" # Versao Atual (Kernel Edition)
 UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json" 
 
 C = {
@@ -291,7 +291,7 @@ class PremiumKillprocessApp(ctk.CTk):
             else:
                 import winsound
                 winsound.MessageBeep(winsound.MB_ICONHAND)
-                key_entry.configure(border_color=C["danger"])
+                key_entry.configure(border_color=C["red"])
                 self.log(">>> ACESSO NEGADO: CHAVE INVÁLIDA.", "error")
 
         btn_verify = ctk.CTkButton(frame, text="AUTENTICAR", font=ctk.CTkFont("Segoe UI", 12, "bold"),
@@ -477,6 +477,24 @@ class PremiumKillprocessApp(ctk.CTk):
         right_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
         right_container.pack(side="right", padx=10, fill="y")
 
+        # --- Botões de Ação (Direita) ---
+        actions_frame = ctk.CTkFrame(self.topbar, fg_color="transparent")
+        actions_frame.pack(side="right", padx=15)
+
+        # Botão de Notificação de Update (NOVO)
+        self.top_update_btn = ctk.CTkButton(
+            actions_frame, text="▲", width=30, height=30, corner_radius=15,
+            fg_color="#1E2631", hover_color="#334155", font=("Segoe UI", 14, "bold"),
+            text_color=C["muted"], command=self.check_for_updates)
+        self.top_update_btn.pack(side="left", padx=5)
+        # Tooltip simulado (hover)
+        self.top_update_btn.bind("<Enter>", lambda e: self.log("ℹ️ Clique para buscar atualizações", "info"))
+
+        settings_btn = ctk.CTkButton(
+            actions_frame, text="⚙️", width=30, height=30, corner_radius=15, 
+            fg_color="#1E2631", hover_color="#334155", font=("Segoe UI", 16))
+        settings_btn.pack(side="left", padx=5)
+
         self.res_menu = ctk.CTkOptionMenu(right_container, values=list(self.resolutions.keys()),
                                           command=self.change_resolution, width=150, height=24,
                                           font=ctk.CTkFont("Segoe UI", 10), dropdown_font=ctk.CTkFont("Segoe UI", 10),
@@ -484,9 +502,6 @@ class PremiumKillprocessApp(ctk.CTk):
         self.res_menu.pack(side="right", padx=10, pady=5)
         self.res_menu.set("1650 x 1080 (Padrão Apex)")
 
-        settings_btn = ctk.CTkButton(right_container, text="⚙️", width=30, height=30, fg_color="transparent",
-                                     hover_color=C["hover"], font=("Segoe UI", 16), command=lambda: self.res_menu.focus_set())
-        settings_btn.pack(side="right")
 
     def change_resolution(self, choice):
         w, h = self.resolutions[choice]
@@ -2161,12 +2176,18 @@ class PremiumKillprocessApp(ctk.CTk):
                     self.log(f"🚀 [Update System]: NOVA VERSÃO DISPONÍVEL: v{latest}!", "success")
                     self.log(f"🚀 [Update System]: Changelog: {data.get('changelog', 'Nenhuma nota informada')}", "info")
                     
+                    # Notificar no botão da topbar
+                    if hasattr(self, "top_update_btn"):
+                        self.top_update_btn.configure(text_color=C["accent"], fg_color="#162B20")
+                    
                     # Perguntar ao usuário
                     from tkinter import messagebox
                     if messagebox.askyesno("Apex Update", f"Nova versão v{latest} disponível!\n\n{data.get('changelog', '')}\n\nDeseja baixar e instalar agora?"):
                         self.perform_update(data["url"])
                 else:
                     self.log("✅ [Update System]: SEU HUD ESTÁ NA VERSÃO MAIS RECENTE.", "success")
+                    if hasattr(self, "top_update_btn"):
+                        self.top_update_btn.configure(text_color=C["muted"], fg_color="#1E2631")
             except Exception as e:
                 self.log(f"⚠️ [Update System]: FALHA AO CONSULTAR SERVIDOR: {e}", "error")
         
@@ -2197,11 +2218,24 @@ class PremiumKillprocessApp(ctk.CTk):
                 
                 bat_content = f"""
 @echo off
-echo Finalizando processos Apex...
-timeout /t 2 /nobreak > nul
+title Killprocess Updater
+echo ========================================
+echo   ATUALIZANDO KILLPROCESS SAPPHIRE...
+echo ========================================
+echo.
+echo Finalizando processos ativos...
+taskkill /f /im "{exe_name}" /t > nul 2>&1
+timeout /t 3 /nobreak > nul
+
+echo Substituindo arquivos...
 del /f /q "{exe_name}"
 rename "{temp_exe}" "{exe_name}"
-echo Sistema Atualizado! Reiniciando...
+
+echo.
+echo ========================================
+echo   SISTEMA ATUALIZADO COM SUCESSO!
+echo ========================================
+timeout /t 1 /nobreak > nul
 start "" "{exe_name}"
 del "%~f0"
 """
