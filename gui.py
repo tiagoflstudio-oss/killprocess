@@ -218,39 +218,54 @@ class PremiumKillprocessApp(ctk.CTk):
             if step == 1: 
                 threading.Thread(target=lambda: winsound.MessageBeep(winsound.MB_ICONASTERISK), daemon=True).start()
             
-            # Cores sérias
-            k_color = "#00CCFF" # Ciano Apex
+            progress = step / 30
             
-            # Pedaços do "K" (Coordenadas relativas ao centro)
-            # 1. Barra Vertical
-            v_start_y = cy - 60
-            v_end_y = cy + 60
-            v_x = cx - 25
-            # Vem de cima
-            v_current_y = v_start_y - (100 * (1 - progress))
-            canvas.create_line(v_x, v_current_y, v_x, v_current_y + 120, fill=k_color, width=8, capstyle="round")
+            # Cores de Fluxo
+            f_color = "#00CCFF" # Sapphire
+            glow_color = "#00FF88" # Neon Green
             
-            # 2. Diagonal Superior
-            # Vem da direita
-            d1_x_offset = 150 * (1 - progress)
-            canvas.create_line(v_x, cy, cx + 25 + d1_x_offset, cy - 60, fill=k_color, width=8, capstyle="round")
-            
-            # 3. Diagonal Inferior
-            # Vem de baixo/direita
-            d2_offset = 150 * (1 - progress)
-            canvas.create_line(v_x, cy, cx + 25 + d2_offset, cy + 60, fill=k_color, width=8, capstyle="round")
-            
-            # Texto de Status (Aparece no final)
-            if progress > 0.8:
-                canvas.create_text(cx, cy + 100, text="SYSTEM OPTIMIZED // READY", 
-                                   font=("Consolas", 12, "bold"), fill="#10B981")
+            # --- DESENHO DO "F" (FLUX OS) ---
+            # Haste Vertical (Sobe do centro)
+            v_start_y = cy + 50
+            v_end_y = cy - 50 + (100 * (1 - progress))
+            if progress > 0:
+                canvas.create_line(cx - 30, v_start_y, cx - 30, cy - 50 + (100 * (1-progress)) if progress < 1 else cy - 50, 
+                                   fill=f_color, width=8, capstyle="round")
+                # Brilho da haste
+                canvas.create_line(cx - 30, v_start_y, cx - 30, cy - 50 + (100 * (1-progress)) if progress < 1 else cy - 50, 
+                                   fill=f_color, width=12, stipple="gray50")
+
+            # Barra Superior (Desliza para a direita)
+            if progress > 0.4:
+                p2 = (progress - 0.4) / 0.6
+                canvas.create_line(cx - 30, cy - 50, cx - 30 + (80 * p2), cy - 50, 
+                                   fill=glow_color, width=8, capstyle="round")
+
+            # Barra Central (Desliza para a direita mais curto)
+            if progress > 0.6:
+                p3 = (progress - 0.6) / 0.4
+                canvas.create_line(cx - 30, cy, cx - 30 + (50 * p3), cy, 
+                                   fill=f_color, width=8, capstyle="round")
+
+            # Efeito de Partículas de "Fluxo"
+            if progress > 0.2:
+                import random
+                for _ in range(3):
+                    px = cx - 30 + (80 * progress) + random.randint(-10, 10)
+                    py = cy + random.randint(-60, 60)
+                    canvas.create_oval(px, py, px+2, py+2, fill=glow_color, outline="")
+
+            # Texto de Status (Ready)
+            if progress > 0.9:
+                canvas.create_text(cx + 20, cy + 80, text="FLUX ENGINE // ONLINE", 
+                                   font=("Consolas", 10, "bold"), fill=glow_color)
 
             if step < 30:
-                splash.after(65, lambda: animate_k_minimal(step + 1)) # Reduzido para ~2s total
+                splash.after(60, lambda: animate_flux_logo(step + 1))
             else:
-                splash.after(300, lambda: [splash.destroy(), self.show_login_gate()]) # CHAMA O LOGIN
+                splash.after(400, lambda: [splash.destroy(), self.show_login_gate()])
 
-        animate_k_minimal()
+        animate_flux_logo()
 
     def show_login_gate(self):
         # Verificar se já está ativado
