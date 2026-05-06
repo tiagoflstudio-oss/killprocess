@@ -12,6 +12,8 @@ from PIL import Image, ImageTk
 from intelligence import brain # Importar a inteligência do HUD
 import pystray
 from pystray import MenuItem as item
+import random
+import winsound
 
 def resource_path(relative_path):
     """ Retorna o caminho absoluto para recursos, funcionando em Dev e no PyInstaller exe. """
@@ -207,64 +209,52 @@ class PremiumKillprocessApp(ctk.CTk):
         def play_boot_sound(freq, dur):
             threading.Thread(target=lambda: winsound.Beep(freq, dur), daemon=True).start()
 
-        def animate_k_minimal(step=0):
+        def animate_flux_logo(step=0):
             canvas.delete("all")
-            cx, cy = sw // 2, sh // 2
-            
-            # Progresso da animação (0.0 a 1.0 em 30 steps)
+            # Dimensões fixas da Splash (600x400)
+            win_w, win_h = 600, 400
+            cx, cy = win_w // 2, win_h // 2
             progress = min(step / 30, 1.0)
             
-            # Som de Inicialização (Chime de Sistema Elegante)
+            # Som de Inicialização (Apenas no frame 1)
             if step == 1: 
                 threading.Thread(target=lambda: winsound.MessageBeep(winsound.MB_ICONASTERISK), daemon=True).start()
             
-            progress = step / 30
-            
             # Cores de Fluxo
-            f_color = "#00CCFF" # Sapphire
-            glow_color = "#00FF88" # Neon Green
+            f_color = "#00CCFF" 
+            glow_color = "#00FF88" 
             
             # --- DESENHO DO "F" (FLUX OS) ---
-            # Haste Vertical (Sobe do centro)
-            v_start_y = cy + 50
-            v_end_y = cy - 50 + (100 * (1 - progress))
-            if progress > 0:
-                canvas.create_line(cx - 30, v_start_y, cx - 30, cy - 50 + (100 * (1-progress)) if progress < 1 else cy - 50, 
-                                   fill=f_color, width=8, capstyle="round")
-                # Brilho da haste
-                canvas.create_line(cx - 30, v_start_y, cx - 30, cy - 50 + (100 * (1-progress)) if progress < 1 else cy - 50, 
-                                   fill=f_color, width=12, stipple="gray50")
+            h_len = 100 * progress
+            # Haste Vertical
+            canvas.create_line(cx - 30, cy + 50, cx - 30, cy + 50 - h_len, fill=f_color, width=8, capstyle="round")
 
-            # Barra Superior (Desliza para a direita)
+            # Barra Superior
             if progress > 0.4:
                 p2 = (progress - 0.4) / 0.6
-                canvas.create_line(cx - 30, cy - 50, cx - 30 + (80 * p2), cy - 50, 
-                                   fill=glow_color, width=8, capstyle="round")
+                canvas.create_line(cx - 30, cy - 50, cx - 30 + (80 * p2), cy - 50, fill=glow_color, width=8, capstyle="round")
 
-            # Barra Central (Desliza para a direita mais curto)
-            if progress > 0.6:
-                p3 = (progress - 0.6) / 0.4
-                canvas.create_line(cx - 30, cy, cx - 30 + (50 * p3), cy, 
-                                   fill=f_color, width=8, capstyle="round")
+            # Barra Central
+            if progress > 0.7:
+                p3 = (progress - 0.7) / 0.3
+                canvas.create_line(cx - 30, cy, cx - 30 + (50 * p3), cy, fill=f_color, width=8, capstyle="round")
 
-            # Efeito de Partículas de "Fluxo"
-            if progress > 0.2:
-                import random
-                for _ in range(3):
-                    px = cx - 30 + (80 * progress) + random.randint(-10, 10)
-                    py = cy + random.randint(-60, 60)
-                    canvas.create_oval(px, py, px+2, py+2, fill=glow_color, outline="")
+            # Partículas de Fluxo
+            for _ in range(2):
+                px = cx - 30 + (progress * 120) + random.randint(-15, 15)
+                py = cy + random.randint(-50, 50)
+                canvas.create_oval(px, py, px+2, py+2, fill=glow_color, outline="")
 
-            # Texto de Status (Ready)
-            if progress > 0.9:
-                canvas.create_text(cx + 20, cy + 80, text="FLUX ENGINE // ONLINE", 
-                                   font=("Consolas", 10, "bold"), fill=glow_color)
+            # Texto de Status
+            if progress > 0.95:
+                canvas.create_text(cx, cy + 100, text="FLUX ENGINE // ONLINE", font=("Consolas", 10, "bold"), fill=glow_color)
 
             if step < 30:
-                splash.after(60, lambda: animate_flux_logo(step + 1))
+                splash.after(40, lambda: animate_flux_logo(step + 1))
             else:
                 splash.after(400, lambda: [splash.destroy(), self.show_login_gate()])
 
+        splash.update() # Força a janela a aparecer
         animate_flux_logo()
 
     def show_login_gate(self):
