@@ -211,50 +211,44 @@ class PremiumKillprocessApp(ctk.CTk):
 
         def animate_flux_logo(step=0):
             canvas.delete("all")
-            # Dimensões fixas da Splash (600x400)
             win_w, win_h = 600, 400
             cx, cy = win_w // 2, win_h // 2
-            progress = min(step / 30, 1.0)
             
-            # Som de Inicialização (Apenas no frame 1)
-            if step == 1: 
-                threading.Thread(target=lambda: winsound.MessageBeep(winsound.MB_ICONASTERISK), daemon=True).start()
+            full_text = "FLUX OS"
+            # Calcular quantas letras mostrar com base no step (30 steps total)
+            chars_to_show = int((step / 30) * len(full_text)) + 1
+            current_text = full_text[:min(chars_to_show, len(full_text))]
             
-            # Cores de Fluxo
-            f_color = "#00CCFF" 
-            glow_color = "#00FF88" 
+            # Efeito de Brilho (Glow) Prateado
+            glow_color = "#94A3B8" # Prata suave para o brilho
+            silver_color = "#F8FAFC" # Prata brilhante principal
             
-            # --- DESENHO DO "F" (FLUX OS) ---
-            h_len = 100 * progress
-            # Haste Vertical
-            canvas.create_line(cx - 30, cy + 50, cx - 30, cy + 50 - h_len, fill=f_color, width=8, capstyle="round")
+            # Camada de Brilho (Levemente deslocada/maior)
+            canvas.create_text(cx, cy, text=current_text, font=("Segoe UI Light", 48, "bold"), 
+                               fill=glow_color, anchor="center")
+            
+            # Camada Principal (Prata Brilhante)
+            canvas.create_text(cx - 2, cy - 2, text=current_text, font=("Segoe UI Light", 48, "bold"), 
+                               fill=silver_color, anchor="center")
 
-            # Barra Superior
-            if progress > 0.4:
-                p2 = (progress - 0.4) / 0.6
-                canvas.create_line(cx - 30, cy - 50, cx - 30 + (80 * p2), cy - 50, fill=glow_color, width=8, capstyle="round")
+            # Partículas de "Faísca" prateadas
+            if step % 2 == 0:
+                for _ in range(5):
+                    px = cx + random.randint(-150, 150)
+                    py = cy + random.randint(-40, 40)
+                    canvas.create_oval(px, py, px+1, py+1, fill="#CBD5E1", outline="")
 
-            # Barra Central
-            if progress > 0.7:
-                p3 = (progress - 0.7) / 0.3
-                canvas.create_line(cx - 30, cy, cx - 30 + (50 * p3), cy, fill=f_color, width=8, capstyle="round")
+            # Texto de Status Discreto
+            if step > 25:
+                canvas.create_text(cx, cy + 80, text="S Y S T E M   L O A D E D", 
+                                   font=("Consolas", 9, "bold"), fill="#64748B", anchor="center")
 
-            # Partículas de Fluxo
-            for _ in range(2):
-                px = cx - 30 + (progress * 120) + random.randint(-15, 15)
-                py = cy + random.randint(-50, 50)
-                canvas.create_oval(px, py, px+2, py+2, fill=glow_color, outline="")
-
-            # Texto de Status
-            if progress > 0.95:
-                canvas.create_text(cx, cy + 100, text="FLUX ENGINE // ONLINE", font=("Consolas", 10, "bold"), fill=glow_color)
-
-            if step < 30:
-                splash.after(40, lambda: animate_flux_logo(step + 1))
+            if step < 35: # Um pouco mais de tempo para ler
+                splash.after(50, lambda: animate_flux_logo(step + 1))
             else:
-                splash.after(400, lambda: [splash.destroy(), self.show_login_gate()])
+                splash.after(600, lambda: [splash.destroy(), self.show_login_gate()])
 
-        splash.update() # Força a janela a aparecer
+        splash.update()
         animate_flux_logo()
 
     def show_login_gate(self):
