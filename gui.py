@@ -638,7 +638,8 @@ class PremiumKillprocessApp(ctk.CTk):
         self.clear_log_btn.configure(text_color=C["muted"])
 
     def create_dashboard_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        # Usando ScrollableFrame para que tudo caiba na tela
+        tab = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent")
         self.tabs["dashboard"] = tab
 
         # ── LINHA 1: Cabeçalho ──────────────────────────────────────────
@@ -2570,42 +2571,43 @@ del "%~f0"
         while True:
             try:
                 import psutil
-                # RAM
+                # ── RAM ──
                 mem = psutil.virtual_memory()
                 ram_pct = mem.percent / 100.0
-                if hasattr(self, "ram_val_lbl"): self.ram_val_lbl.configure(text=f"{mem.used/(1024**3):.1f} GB")
-                if hasattr(self, "ram_pb"): self.ram_pb.set(ram_pct)
+                if hasattr(self, "ram_lbl"): 
+                    self.ram_lbl.configure(text=f"{mem.percent:.1f}%")
+                    if hasattr(self, "ram_lbl_pb"): self.ram_lbl_pb.set(ram_pct)
 
-                # CPU
+                # ── CPU ──
                 cpu_p = psutil.cpu_percent()
-                if hasattr(self, "dash_cpu_lbl"): self.dash_cpu_lbl.configure(text=f"{cpu_p:.1f}%")
-                if hasattr(self, "dash_cpu_pb"): self.dash_cpu_pb.set(cpu_p/100.0)
+                if hasattr(self, "cpu_lbl"): 
+                    self.cpu_lbl.configure(text=f"{cpu_p:.1f}%")
+                    if hasattr(self, "cpu_lbl_pb"): self.cpu_lbl_pb.set(cpu_p/100.0)
 
-                # PROC
+                # ── PROCESSOS ──
                 procs = len(psutil.pids())
-                if hasattr(self, "proc_val_lbl"): self.proc_val_lbl.configure(text=str(procs))
-                if hasattr(self, "proc_pb"): self.proc_pb.set(min(procs/500, 1.0))
+                if hasattr(self, "proc_lbl"): 
+                    self.proc_lbl.configure(text=str(procs))
+                    if hasattr(self, "proc_lbl_pb"): self.proc_lbl_pb.set(min(procs/500, 1.0))
 
-                # GPU (Simulado)
+                # ── GPU (Simulado) ──
                 import random
                 gpu_p = random.randint(15, 45)
-                if hasattr(self, "dash_gpu_lbl"): self.dash_gpu_lbl.configure(text=f"{gpu_p}%")
-                if hasattr(self, "dash_gpu_pb"): self.dash_gpu_pb.set(gpu_p/100.0)
+                if hasattr(self, "gpu_lbl"): 
+                    self.gpu_lbl.configure(text=f"{gpu_p}%")
+                    if hasattr(self, "gpu_lbl_pb"): self.gpu_lbl_pb.set(gpu_p/100.0)
 
-                # TEMP (Simulado)
-                temp_v = random.randint(40, 65)
-                if hasattr(self, "dash_temp_lbl"): self.dash_temp_lbl.configure(text=f"{temp_v}°C")
-                if hasattr(self, "dash_temp_pb"): self.dash_temp_pb.set((temp_v-30)/70.0)
-
-                # DISK
+                # ── DISCO ──
                 disk = psutil.disk_usage('/')
-                if hasattr(self, "dash_disk_lbl"): self.dash_disk_lbl.configure(text=f"{disk.percent}%")
-                if hasattr(self, "dash_disk_pb"): self.dash_disk_pb.set(disk.percent/100.0)
+                if hasattr(self, "disk_lbl"): 
+                    self.disk_lbl.configure(text=f"{disk.percent}%")
+                    if hasattr(self, "disk_lbl_pb"): self.disk_lbl_pb.set(disk.percent/100.0)
 
-                # NET (Simulado Activity)
+                # ── REDE (Simulado Activity) ──
                 net_v = random.randint(1, 100)
-                if hasattr(self, "dash_net_lbl"): self.dash_net_lbl.configure(text=f"{net_v} Mb/s")
-                if hasattr(self, "dash_net_pb"): self.dash_net_pb.set(net_v/100.0)
+                if hasattr(self, "net_lbl"): 
+                    self.net_lbl.configure(text=f"{net_v} Mb/s")
+                    if hasattr(self, "net_lbl_pb"): self.net_lbl_pb.set(net_v/100.0)
 
                 self.draw_radar_chart()
             except: pass
