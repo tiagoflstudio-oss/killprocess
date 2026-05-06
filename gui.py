@@ -35,6 +35,7 @@ C = {
     "bg": "#080B0F",         # Fundo principal muito escuro, quase abissal
     "panel": "#0B1015",      # Fundo de painéis/sidebar
     "card": "#10151B",       # Fundo dos cards interativos
+    "card_light": "#1E293B", # Azul um pouco mais claro para destaque
     "border": "#1E2631",     # Bordas e separadores sutis
     "accent": "#00FF88",     # Verde ciberneon para ações de sucesso/status ativo
     "hover": "#162B20",      # Hover sutil esverdeado para botões
@@ -138,7 +139,7 @@ SERVICES_MAP = {
         {"id": "PhoneSvc", "name": "Serviço de Telefone", "type": "service", "checked": True},
         {"id": "SensorSvc", "name": "Serviço de Sensores", "type": "service", "checked": True},
         {"id": "SensorDataSvc", "name": "Dados dos Sensores", "type": "service", "checked": True},
-        {"id": "SensorsSrv", "name": "Servidor de Sensores", "type": "service", "checked": True}
+        {"id": "SensorsSrv", "name": "Servidor de Sensores", "type": "service", "checked": True},
     ],
     "Nível 5: Redes & Streaming": [
         {"id": "SharedAccess", "name": "Compartilhamento de Internet", "type": "service", "checked": True},
@@ -151,31 +152,44 @@ SERVICES_MAP = {
         {"id": "TrkWks", "name": "Clientes de Rastreamento de Link", "type": "service", "checked": True}
     ],
     "Nível 6: Segurança & Criptografia": [
+        {"id": "KeyIso", "name": "Isolamento de Chave", "type": "service", "checked": True},
         {"id": "VaultSvc", "name": "Gerenciador de Credenciais", "type": "service", "checked": True},
-        {"id": "SstpSvc", "name": "Protocolo de Túnel de Soquete Seguro", "type": "service", "checked": True},
         {"id": "SCardSvr", "name": "Cartão Inteligente", "type": "service", "checked": True},
-        {"id": "ScDeviceEnum", "name": "Enumeração de Dispositivos de Cartão", "type": "service", "checked": True},
-        {"id": "wisvc", "name": "Insider Service", "type": "service", "checked": True},
-        {"id": "dmwappushservice", "name": "Roteamento WAP Push", "type": "service", "checked": True},
+        {"id": "wisvc", "name": "Windows Insider Service", "type": "service", "checked": True},
         {"id": "RemoteRegistry", "name": "Registro Remoto", "type": "service", "checked": True},
-        {"id": "WbioSrvc", "name": "Biometria", "type": "service", "checked": True}
     ],
     "Nível 7: Modo Deus (God Mode)": [
         {"id": "PushToInstall", "name": "Windows Store Push Service", "type": "service", "checked": True},
-        {"id": "WMPNetworkSvc", "name": "WMP Network Service", "type": "service", "checked": True},
         {"id": "ClipSVC", "name": "Serviço de Licença de Cliente", "type": "service", "checked": True},
-        {"id": "AppPredictionSvc", "name": "Serviço de Previsão de Aplicativos", "type": "service", "checked": True},
         {"id": "AppXSvc", "name": "Serviço de Implantação AppX", "type": "service", "checked": True},
         {"id": "LicenseManager", "name": "Gerenciador de Licenças", "type": "service", "checked": True},
-        {"id": "tzautoupdate", "name": "Atualização Automática de Fuso Horário", "type": "service", "checked": True},
+        {"id": "WpnService", "name": "Notificações Push", "type": "service", "checked": True},
+        {"id": "BITS", "name": "Background Intelligent Transfer", "type": "service", "checked": True},
+        {"id": "defragsvc", "name": "Otimização de Unidades", "type": "service", "checked": True},
+    ],
+    "Nível 8: Gaming Polish (Ultra Seguro)": [
+        {"id": "Fax", "name": "Serviço de Fax", "type": "service", "checked": True},
+        {"id": "MapsBroker", "name": "Gerenciador de Mapas Download", "type": "service", "checked": True},
+        {"id": "WpcMonService", "name": "Controle de Pais", "type": "service", "checked": True},
+        {"id": "RetailDemo", "name": "Serviço de Demo de Loja", "type": "service", "checked": True},
         {"id": "WalletService", "name": "Serviço de Carteira", "type": "service", "checked": True},
-        {"id": "WpnService", "name": "Notificações Push do Windows", "type": "service", "checked": True},
-        {"id": "WpnUserService", "name": "Serviço de Usuário de Notificações", "type": "service", "checked": True},
-        {"id": "AxInstSV", "name": "Instalação ActiveX", "type": "service", "checked": True},
-        {"id": "BITS", "name": "Serviço de Transferência Inteligente em Segundo Plano", "type": "service", "checked": True},
-        {"id": "CertPropSvc", "name": "Propagação de Certificado", "type": "service", "checked": True},
-        {"id": "defragsvc", "name": "Otimização de Unidades / Desfragmentador", "type": "service", "checked": True},
-        {"id": "EntAppSvc", "name": "Serviço de Aplicativo Empresarial", "type": "service", "checked": True}
+        {"id": "icssvc", "name": "Hotspot Móvel", "type": "service", "checked": True},
+        {"id": "TrkWks", "name": "Rastreamento de Link", "type": "service", "checked": True},
+    ],
+    "Nível 9: Deep Gaming Engine (System)": [
+        {"id": "PcaSvc", "name": "Assistente de Compatibilidade", "type": "service", "checked": True},
+        {"id": "SysMain", "name": "SysMain (Superfetch)", "type": "service", "checked": True},
+        {"id": "WSearch", "name": "Windows Search (Indexação)", "type": "service", "checked": True},
+        {"id": "TextInputHost", "name": "Processo de Entrada de Texto", "type": "process", "checked": True},
+        {"id": "ctfmon", "name": "CTF Loader", "type": "process", "checked": True},
+        {"id": "SmartScreen", "name": "Windows SmartScreen", "type": "process", "checked": True},
+        {"id": "WbioSrvc", "name": "Serviço Biométrico", "type": "service", "checked": True},
+    ],
+    "Nível 10: Security & Defense Off (Agressivo)": [
+        {"id": "SecurityHealthService", "name": "Windows Security Health", "type": "service", "checked": True},
+        {"id": "WinDefend", "name": "Windows Defender Antivirus", "type": "service", "checked": True},
+        {"id": "WdNisSvc", "name": "Defender Network Inspection", "type": "service", "checked": True},
+        {"id": "Sense", "name": "Defender ATP", "type": "service", "checked": True},
     ]
 }
 
@@ -192,17 +206,17 @@ class PremiumKillprocessApp(ctk.CTk):
         splash.overrideredirect(True)
         splash.attributes("-topmost", True)
         
-        sw, sh = 1280, 720
+        w, h = 600, 400
         # Centralizar na tela
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
-        x = (screen_w - sw) // 2
-        y = (screen_h - sh) // 2
-        splash.geometry(f"{sw}x{sh}+{x}+{y}")
+        x = (screen_w - w) // 2
+        y = (screen_h - h) // 2
+        splash.geometry(f"{w}x{h}+{x}+{y}")
         splash.configure(fg_color="#080B0F")
         
-        canvas = ctk.CTkCanvas(splash, width=sw, height=sh, bg="#080B0F", highlightthickness=0)
-        canvas.pack()
+        canvas = ctk.CTkCanvas(splash, width=w, height=h, bg="#080B0F", highlightthickness=0)
+        canvas.pack(fill="both", expand=True)
         
         import winsound, threading
         
@@ -244,9 +258,9 @@ class PremiumKillprocessApp(ctk.CTk):
                                    font=("Consolas", 9, "bold"), fill="#64748B", anchor="center")
 
             if step < 35: # Um pouco mais de tempo para ler
-                splash.after(50, lambda: animate_flux_logo(step + 1))
+                splash.after(85, lambda: animate_flux_logo(step + 1))
             else:
-                splash.after(600, lambda: [splash.destroy(), self.show_login_gate()])
+                splash.after(800, lambda: [splash.destroy(), self.show_login_gate()])
 
         splash.update()
         animate_flux_logo()
@@ -315,9 +329,14 @@ class PremiumKillprocessApp(ctk.CTk):
             "1280 x 720 (HD)": (1280, 720)
         }
         
-        # Iniciar em janela padrão 1280x720 (Corte do Fullscreen automático)
-        self.geometry("1280x720")
-        # self.attributes("-fullscreen", True) # Comentado conforme pedido
+        # Iniciar em janela padrão 1280x720 Centralizado
+        win_w, win_h = 1280, 720
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        pos_x = (screen_w - win_w) // 2
+        pos_y = (screen_h - win_h) // 2
+        self.geometry(f"{win_w}x{win_h}+{pos_x}+{pos_y}")
+        
         self.bind("<Escape>", lambda e: self.attributes("-fullscreen", False)) 
         
         # Esconde a janela principal para mostrar o Splash primeiro
@@ -627,6 +646,7 @@ class PremiumKillprocessApp(ctk.CTk):
         hdr.pack(fill="x", pady=(0, 10))
         ctk.CTkLabel(hdr, text="CENTRO DE CONTROLE", font=self.title_font,
                      text_color=C["text"]).pack(side="left")
+        
         self.status_val_lbl = ctk.CTkLabel(
             hdr, text="● PRONTO", font=ctk.CTkFont("Segoe UI", 11, "bold"),
             text_color=C["accent"], fg_color="#051408", corner_radius=6, padx=10, pady=3)
@@ -661,13 +681,16 @@ class PremiumKillprocessApp(ctk.CTk):
         def update_desc(txt): self.level_desc_lbl.configure(text=txt)
 
         levels_data = [
-            (1, "N1", "Apps & Bloatwares", "#00FF88", "Fecha navegadores, mensageiros e apps em segundo plano."),
-            (2, "N2", "Impressão & Manutenção", "#00FFB2", "Desativa serviços de impressoras, fax e manutenção."),
-            (3, "N3", "Telemetria & Rastreamento", "#FFFF00", "Interrompe telemetria, coleta de dados e diagnósticos."),
-            (4, "N4", "Xbox & Conexões", "#FF8000", "Remove suporte a Bluetooth e serviços Xbox."),
-            (5, "N5", "Redes & Streaming", "#FF0055", "Desativa compartilhamento, mapas e sensores."),
-            (6, "N6", "Segurança & Criptografia", "#00CCFF", "Encerra credenciais e segurança local."),
-            (7, "N7", "Modo Deus (God Mode)", "#FFD700", "Performance Gamer Suprema: Modo Deus ativado."),
+            (1, "N1", "Apps", "#00FF88", "Apps em segundo plano."),
+            (2, "N2", "Print", "#00FFB2", "Serviços de impressora e fax."),
+            (3, "N3", "Telemetria", "#FFFF00", "Coleta de dados e diagnósticos."),
+            (4, "N4", "Xbox/BT", "#FF8000", "Xbox Live e Bluetooth."),
+            (5, "N5", "Net/Maps", "#FF0055", "Compartilhamento e mapas."),
+            (6, "N6", "Crypto", "#00CCFF", "Segurança local e biometria."),
+            (7, "N7", "God Mode", "#FFD700", "Modo Deus: Performance Suprema."),
+            (8, "N8", "Polish", "#00FF88", "Polish: Serviços fantasmas seguros."),
+            (9, "N9", "Engine", "#C084FC", "Deep Engine: Otimização de Sistema."),
+            (10, "N10", "Security", "#EF4444", "⚠️ AVISO: Desativa Windows Defender.")
         ]
         
         row_idx = 0
@@ -676,20 +699,20 @@ class PremiumKillprocessApp(ctk.CTk):
             f = ctk.CTkFrame(self.lights_frame, fg_color="transparent")
             f.grid(row=row_idx, column=col_idx, sticky="w", padx=3, pady=3)
             
-            cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 10, "bold"),
-                                  fg_color=color, hover_color=color, width=22,
+            cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 9, "bold"),
+                                  fg_color=color, hover_color=color, width=18,
                                   command=lambda d=desc: update_desc(d))
-            if num <= 6: cb.select()
-            cb.pack(side="left", padx=(0, 5))
+            if num <= 8: cb.select() # Nível 9 e 10 começam desmarcados por segurança
+            cb.pack(side="left", padx=(0, 2))
             cb.bind("<Enter>", lambda e, d=desc: update_desc(d))
             
-            # Usar a chave completa do SERVICES_MAP para evitar KeyError
+            # Mapeamento dinâmico
             full_key = list(SERVICES_MAP.keys())[num-1]
             self.level_checkboxes_dashboard[full_key] = cb
             self.level_indicators[num] = {"circle": cb, "cb": cb, "color": color}
             
             col_idx += 1
-            if col_idx > 1:
+            if col_idx > 2: # 3 Colunas para caber os 10 níveis
                 col_idx = 0
                 row_idx += 1
 
@@ -946,7 +969,10 @@ class PremiumKillprocessApp(ctk.CTk):
             {"id": "Nível 4: Xbox & Conexões Secundárias", "title": "🔴 Nível 4", "subtitle": "Xbox & Conexões", "row": 1, "col": 1},
             {"id": "Nível 5: Redes & Streaming", "title": "🌐 Nível 5", "subtitle": "Redes & Streaming", "row": 2, "col": 0},
             {"id": "Nível 6: Segurança & Criptografia", "title": "🔒 Nível 6", "subtitle": "Segur. & Cripto.", "row": 2, "col": 1},
-            {"id": "Nível 7: Modo Deus (God Mode)", "title": "👑 Modo Deus", "subtitle": "God Mode Supremo", "row": 3, "col": 0}
+            {"id": "Nível 7: Modo Deus (God Mode)", "title": "👑 Modo Deus", "subtitle": "God Mode Supremo", "row": 3, "col": 0},
+            {"id": "Nível 8: Gaming Polish (Ultra Seguro)", "title": "✨ Nível 8", "subtitle": "Gaming Polish", "row": 3, "col": 1},
+            {"id": "Nível 9: Deep Gaming Engine (System)", "title": "⚙️ Nível 9", "subtitle": "Deep Engine", "row": 4, "col": 0},
+            {"id": "Nível 10: Security & Defense Off (Agressivo)", "title": "🛡️ Nível 10", "subtitle": "Security OFF", "row": 4, "col": 1}
         ]
 
         for c in level_cards_data:
@@ -956,10 +982,7 @@ class PremiumKillprocessApp(ctk.CTk):
                 font=self.section_font, height=60, corner_radius=10,
                 command=lambda cat=c["id"]: self.show_level_options(cat)
             )
-            if c["id"] == "Nível 7: Modo Deus (God Mode)":
-                btn_card.grid(row=c["row"], column=c["col"], columnspan=2, padx=4, pady=4, sticky="nsew")
-            else:
-                btn_card.grid(row=c["row"], column=c["col"], padx=4, pady=4, sticky="nsew")
+            btn_card.grid(row=c["row"], column=c["col"], padx=4, pady=4, sticky="nsew")
 
         # ---------------------------------------------------------
         self.level_details_frame = ctk.CTkFrame(self.management_content_frame, fg_color="transparent")
@@ -1840,6 +1863,8 @@ class PremiumKillprocessApp(ctk.CTk):
             self.apply_kernel_restore()
         elif cmd == "standby_flush":
             self.run_extra_optimization("ram_flush")
+        elif cmd == "svchost_grouping":
+            self.apply_svchost_grouping()
         elif cmd == "apply_all":
             self.apply_all_kernel_tweaks()
 
@@ -1848,6 +1873,7 @@ class PremiumKillprocessApp(ctk.CTk):
         self.apply_msi_mode()
         self.apply_cpu_scheduler()
         self.apply_net_throttle()
+        self.apply_svchost_grouping()
         self.run_extra_optimization("ram_flush")
         self.log("\n🚀 [Kernel Boost]: Sistema 100% calibrado para Latência Zero!", "success")
 
@@ -1891,6 +1917,17 @@ class PremiumKillprocessApp(ctk.CTk):
         ]
         for c in cmds: run_cmd(c)
         self.log("✅ [Network]: Stack de rede liberada para máxima performance!", "success")
+
+    def apply_svchost_grouping(self):
+        self.log("\n📦 [Process Grouping]: Agrupando serviços do Windows (SvcHost)...", "info")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] SvcHostSplitThresholdInKB definido para 384GB.", "success")
+            return
+        
+        # Define o limiar para 384GB (402653184 KB) - Força o agrupamento em quase qualquer PC
+        cmd = 'Set-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control" -Name "SvcHostSplitThresholdInKB" -Value 402653184'
+        run_cmd(cmd)
+        self.log("✅ [Process Grouping]: Número de processos svchost reduzido com sucesso!", "success")
 
     def apply_vbs_disable(self):
         self.log("\n🛡️ [VBS/HVCI]: Desativando Segurança baseada em Virtualização...", "warning")
@@ -1940,6 +1977,7 @@ class PremiumKillprocessApp(ctk.CTk):
             {"id": "msi", "title": "GPU MSI Mode", "desc": "Ativa interrupções por mensagem na placa de vídeo", "color": "#00FF88", "cmd": "msi_mode"},
             {"id": "scheduler", "title": "CPU Scheduler (0x26)", "desc": "Ajusta o Quantum da CPU para latência zero", "color": "#00CCFF", "cmd": "cpu_scheduler"},
             {"id": "network", "title": "Network Throttling", "desc": "Desativa o limite de processamento de pacotes", "color": "#FFCC00", "cmd": "net_throttle"},
+            {"id": "grouping", "title": "Process Grouping", "desc": "Agrupa serviços em menos processos svchost.exe", "color": "#C084FC", "cmd": "svchost_grouping"},
             {"id": "vbs", "title": "Disable VBS/HVCI", "desc": "Ganha até 15% de FPS (Reduz segurança)", "color": "#EF4444", "cmd": "vbs_disable"},
             {"id": "standby", "title": "Standby List Flush", "desc": "Limpa cache de memória em espera do Windows", "color": "#FF0055", "cmd": "standby_flush"},
             {"id": "restore", "title": "Restaurar Padrões", "desc": "Reverte ajustes de Kernel para o padrão Windows", "color": "#64748B", "cmd": "kernel_restore"}
@@ -2157,6 +2195,27 @@ class PremiumKillprocessApp(ctk.CTk):
                 pass
         
         threading.Thread(target=pulse, daemon=True).start()
+
+    def update_stats(self):
+        try:
+            import psutil
+            ram = psutil.virtual_memory().percent
+            cpu = psutil.cpu_percent()
+            procs = len(psutil.pids())
+            
+            # Atualizar Labels de forma segura
+            if self.winfo_exists():
+                self.ram_lbl.configure(text=f"{ram}%")
+                self.cpu_lbl.configure(text=f"{cpu}%")
+                if hasattr(self, "proc_lbl"):
+                    self.proc_lbl.configure(text=str(procs))
+                    # Meta: < 150 processos (Sutil)
+                    color = C["accent"] if procs <= 150 else C["text"]
+                    self.proc_lbl.configure(text_color=color)
+        except:
+            pass
+        
+        self.after(2000, self.update_stats)
 
     def check_for_updates(self):
         self.log("🌐 [Update System]: CONSULTANDO SERVIDOR...", "info")
