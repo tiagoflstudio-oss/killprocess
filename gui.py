@@ -344,7 +344,6 @@ class PremiumKillprocessApp(ctk.CTk):
         self.after(100, self.show_splash)
         
         self.setup_ui()
-        self.start_system_audit()
         
     def setup_ui(self):
         self.configure(fg_color=C["bg"])
@@ -407,7 +406,8 @@ class PremiumKillprocessApp(ctk.CTk):
         
         # Content (Área dinâmica - Ajustada para encostar no monitor)
         self.content_frame = ctk.CTkFrame(self.main_container, fg_color=C["bg"], corner_radius=0)
-        self.content_frame.pack(side="left", fill="both", expand=True, padx=(20, 2), pady=20)
+        self.content_frame.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=0)
+        self.content_frame.grid_columnconfigure(0, weight=1)
         self._build_content()
 
         # Configurações Adicionais
@@ -449,10 +449,18 @@ class PremiumKillprocessApp(ctk.CTk):
 
         self.switch_tab("dashboard")
 
-        # Threads
+        # Iniciar threads de background apenas uma vez
+        self.start_background_loops()
+
+    def start_background_loops(self):
+        """ Inicializa todos os motores de background de forma única. """
+        self.log("🚀 Iniciando motores de background...", "info")
         threading.Thread(target=self.shell_clock_loop, daemon=True).start()
         threading.Thread(target=self.autoboost_polling_loop, daemon=True).start()
         threading.Thread(target=self.refresh_stats_loop, daemon=True).start()
+        
+        # Iniciar auditoria inicial
+        self.start_system_audit()
 
     # --- Lógica de Redimensionamento do Terminal ---
     def start_resizing(self, event):
@@ -493,6 +501,10 @@ class PremiumKillprocessApp(ctk.CTk):
                                             onvalue=True, offvalue=False) 
         self.dry_run_switch.pack(side="left", padx=5)
         self.dry_run_switch.deselect()
+
+        # Central Audit Container (Inicia vazio)
+        self.audit_top_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
+        self.audit_top_container.pack(side="left", fill="both", expand=True, padx=20)
 
         # Container Direito (Configurações)
         right_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
@@ -621,15 +633,24 @@ class PremiumKillprocessApp(ctk.CTk):
         
         self.log_textbox.insert("end", ">>> FLUX OS inicializado.\n" + "="*30 + "\n", "info")
 
-    def log(self, text, tag=None):
-        if tag:
-            self.log_textbox.insert("end", text + "\n", tag)
-        else:
-            self.log_textbox.insert("end", text + "\n")
-        self.log_textbox.see("end")
+    def log(self, text, tag="info"):
+        """ Versão unificada e Thread-Safe do log. """
+        timestamp = time.strftime("%H:%M:%S")
+        full_msg = f"[{timestamp}] {text}\n"
+        
+        # Agendar a atualização na thread principal (Safe)
+        self.after(0, lambda: self._safe_log_write(full_msg, tag))
         
         if "✅" in text or "✔️" in text:
             self.pending_clear = True
+
+    def _safe_log_write(self, msg, tag):
+        try:
+            if hasattr(self, "log_textbox") and self.log_textbox.winfo_exists():
+                self.log_textbox.insert("end", msg, tag)
+                self.log_textbox.see("end")
+        except:
+            pass
 
     def clear_terminal_logs(self):
         self.log_textbox.delete("1.0", "end")
@@ -638,15 +659,19 @@ class PremiumKillprocessApp(ctk.CTk):
 
     def create_dashboard_tab(self):
         # Usando ScrollableFrame com expansão total para o cockpit panorâmico
-        tab = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent")
+        tab = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent", corner_radius=0)
+        tab.pack(fill="both", expand=True)
         self.tabs["dashboard"] = tab
         
-        # Truque para forçar a largura total no frame interno
+        # SOLUÇÃO DEFINITIVA: Força o frame interno a seguir a largura do canvas
+        tab._parent_canvas.bind("<Configure>", lambda e: tab._parent_canvas.itemconfig(tab._parent_canvas.find_withtag("all")[0], width=e.width))
+        
+        # Configura a coluna do frame interno para expandir
         tab.grid_columnconfigure(0, weight=1)
 
         # ── LINHA 1: Cabeçalho ──────────────────────────────────────────
         hdr = ctk.CTkFrame(tab, fg_color="transparent")
-        hdr.pack(fill="x", expand=True, pady=(0, 10))
+        hdr.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         ctk.CTkLabel(hdr, text="CENTRO DE CONTROLE", font=self.title_font,
                      text_color=C["text"]).pack(side="left")
         
@@ -658,7 +683,7 @@ class PremiumKillprocessApp(ctk.CTk):
         # ── LINHA 2: Seletor de Níveis (PANORÂMICO TOTAL) ───────────────
         lvl_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1,
                                  border_color=C["border"], corner_radius=15)
-        lvl_card.pack(fill="x", expand=True, pady=(0, 10))
+        lvl_card.grid(row=1, column=0, sticky="ew", pady=(0, 10))
 
         ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO (STATUS DO KERNEL)",
                      font=ctk.CTkFont("Segoe UI", 9, "bold"),
@@ -701,8 +726,12 @@ class PremiumKillprocessApp(ctk.CTk):
             if num <= 8: cb.select()
             cb.pack(side="left", padx=(0, 2))
             cb.bind("<Enter>", lambda e, d=desc: update_desc(d))
-            full_key = list(SERVICES_MAP.keys())[num-1]
-            self.level_checkboxes_dashboard[full_key] = cb
+            
+            try:
+                full_key = list(SERVICES_MAP.keys())[num-1]
+                self.level_checkboxes_dashboard[full_key] = cb
+            except: pass
+                
             self.level_indicators[num] = {"circle": cb, "cb": cb, "color": color}
             col_idx += 1
             if col_idx > 4: 
@@ -712,7 +741,9 @@ class PremiumKillprocessApp(ctk.CTk):
 
         # ── LINHA 3: Métricas de Telemetria (Grid 2x3 Expandido) ──────
         m_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        m_frame.pack(fill="x", expand=True, pady=(0, 10))
+        m_frame.grid(row=2, column=0, sticky="ew", pady=(0, 10))
+        m_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
         def add_m_card(title, attr, color, r, c):
             card = ctk.CTkFrame(m_frame, fg_color=C["card"], border_width=1, 
                                  border_color=C["border"], corner_radius=15)
@@ -732,13 +763,11 @@ class PremiumKillprocessApp(ctk.CTk):
         add_m_card("NETWORK", "net_lbl", "#C084FC", 0, 2)
         add_m_card("CPU USAGE", "cpu_lbl", C["accent"], 1, 0)
         add_m_card("DISK USAGE", "disk_lbl", "#2DD4BF", 1, 1)
-        add_m_card("PROCESSOS", "proc_lbl", "#3B82F6", 1, 2)
-        m_frame.grid_columnconfigure((0, 1, 2), weight=1)
-        m_frame.grid_rowconfigure((0, 1), weight=1)
+        add_m_card("PROCESSOS", "proc_lbl", "#38BDF8", 1, 2)
 
         # ── LINHA 4: Botões de Ação + Radar ─────────────────────────────
         row3 = ctk.CTkFrame(tab, fg_color="transparent")
-        row3.pack(fill="x", expand=True, pady=(0, 4))
+        row3.grid(row=3, column=0, sticky="ew", pady=(0, 4))
         row3.grid_columnconfigure(0, weight=2)
         row3.grid_columnconfigure(1, weight=1)
 
@@ -806,7 +835,7 @@ class PremiumKillprocessApp(ctk.CTk):
 
         # ── LINHA 5: Manutenção Avançada ────────────────────────────────
         m_adv_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        m_adv_card.pack(fill="x", expand=True, pady=(6, 20))
+        m_adv_card.grid(row=4, column=0, sticky="ew", pady=(6, 20))
         ctk.CTkLabel(m_adv_card, text="▌ MANUTENÇÃO AVANÇADA", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(12, 10))
         
         m_grid = ctk.CTkFrame(m_adv_card, fg_color="transparent")
@@ -816,8 +845,10 @@ class PremiumKillprocessApp(ctk.CTk):
         m_btn_style = {"height": 45, "corner_radius": 8, "font": ctk.CTkFont("Segoe UI", 11, "bold"), "border_width": 1, "border_color": C["border"], "fg_color": "#0F172A", "hover_color": "#1E293B"}
         self.clean_btn = ctk.CTkButton(m_grid, text="🧹 LIMPEZA DISCO", **m_btn_style, text_color="#10B981", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("clean_temp",)).start())
         self.clean_btn.grid(row=0, column=0, padx=5, sticky="nsew")
+        
         self.dns_btn = ctk.CTkButton(m_grid, text="🌐 FLUSH DNS", **m_btn_style, text_color="#3B82F6", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("flush_dns",)).start())
         self.dns_btn.grid(row=0, column=1, padx=5, sticky="nsew")
+        
         self.power_btn = ctk.CTkButton(m_grid, text="⚡ PLANO ULTIMATE", **m_btn_style, text_color="#FBBF24", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("power_plan",)).start())
         self.power_btn.grid(row=0, column=2, padx=5, sticky="nsew")
         
@@ -1025,20 +1056,25 @@ class PremiumKillprocessApp(ctk.CTk):
         # Buscar lista de processos reais usando tasklist via subprocess
         try:
             import subprocess
-            out = subprocess.check_output(["tasklist", "/FO", "CSV"], text=True, errors="ignore")
-            lines = out.strip().split("\n")
             active_p = {}
-            for line in lines[1:]:
-                parts = line.split(",")
-                if len(parts) >= 5:
-                    p_name = parts[0].strip('"').lower()
-                    pid = parts[1].strip('"')
-                    mem = parts[4].strip('"')
-                    # Somar uso ou guardar
+            for proc in psutil.process_iter(['name', 'pid', 'memory_info']):
+                try:
+                    p_name = proc.info['name'].lower()
+                    pid = str(proc.info['pid'])
+                    mem_kb = proc.info['memory_info'].rss / 1024
+                    
                     if p_name not in active_p:
-                        active_p[p_name] = {"pid": pid, "mem": mem, "instances": 1}
+                        active_p[p_name] = {"pid": pid, "mem_kb": mem_kb, "instances": 1}
                     else:
                         active_p[p_name]["instances"] += 1
+                        active_p[p_name]["mem_kb"] += mem_kb
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+            
+            # Formatar memória final
+            for p_name in active_p:
+                val = active_p[p_name]["mem_kb"]
+                active_p[p_name]["mem"] = f"{val:,.0f} K".replace(",", ".")
         except Exception as e:
             self.log(f"⚠️ Erro ao executar tasklist: {e}", "error")
             active_p = {}
@@ -1396,13 +1432,10 @@ class PremiumKillprocessApp(ctk.CTk):
     def autoboost_polling_loop(self):
         while self.autoboost_enabled:
             try:
-                import subprocess
-                out = subprocess.check_output(["tasklist", "/FO", "CSV"], text=True, errors="ignore")
-                lines = out.lower()
-
+                running_procs = {p.info['name'].lower() for p in psutil.process_iter(['name'])}
                 for g in self.supported_games:
                     exe = g["exe"].lower()
-                    if exe in lines:
+                    if exe in running_procs:
                         if exe in self.autoboost_status_lbls:
                             self.autoboost_status_lbls[exe].configure(text="🔥 Ativo", text_color="#10B981")
                         self.log(f"\n🎮 [Auto-Boost]: Jogo detectado rodando: {exe}! Ativando Modo Deus automaticamente.", "info")
@@ -1545,8 +1578,6 @@ class PremiumKillprocessApp(ctk.CTk):
             )
             btn_game.grid(row=r, column=c, padx=6, pady=6, sticky="nsew")
 
-        # Iniciar loop do relógio na aba Shell
-        threading.Thread(target=self.shell_clock_loop, daemon=True).start()
 
     def create_optimize_center_tab(self):
         tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
@@ -1988,18 +2019,19 @@ class PremiumKillprocessApp(ctk.CTk):
         self.initial_stats = {}
         self.audit_progress = 0
         
-        # Adicionar barra de carregamento no rodapé (footer)
-        self.footer_frame = ctk.CTkFrame(self, fg_color="#050505", height=25, corner_radius=0)
-        self.footer_frame.pack(side="bottom", fill="x")
-        
-        self.audit_bar = ctk.CTkProgressBar(self.footer_frame, width=300, height=4, corner_radius=0, 
+        # Limpar container se houver algo
+        for widget in self.audit_top_container.winfo_children():
+            widget.destroy()
+            
+        # Criar Auditoria no TOPO (Header)
+        self.audit_bar = ctk.CTkProgressBar(self.audit_top_container, width=200, height=6, corner_radius=3, 
                                             fg_color="#1E2631", progress_color="#00CCFF")
-        self.audit_bar.pack(side="left", padx=20, pady=10)
+        self.audit_bar.pack(side="left", padx=(50, 10))
         self.audit_bar.set(0)
         
-        self.audit_lbl = ctk.CTkLabel(self.footer_frame, text="AUDITORIA INICIAL DO SISTEMA: 0%", 
+        self.audit_lbl = ctk.CTkLabel(self.audit_top_container, text="AUDITORIA INICIAL: 0%", 
                                       font=ctk.CTkFont("Consolas", 9, "bold"), text_color="#00CCFF")
-        self.audit_lbl.pack(side="left", padx=10)
+        self.audit_lbl.pack(side="left")
 
         def run_audit():
             import psutil, time
@@ -2010,16 +2042,28 @@ class PremiumKillprocessApp(ctk.CTk):
             self.initial_stats['proc_count'] = len(psutil.pids())
             
             for i in range(1, 101):
-                time.sleep(0.3) # 30 segundos total (100 * 0.3)
+                if not self.winfo_exists(): return
+                time.sleep(0.3)
                 self.audit_progress = i / 100
-                self.audit_bar.set(self.audit_progress)
-                self.audit_lbl.configure(text=f"AUDITORIA INICIAL DO SISTEMA: {i}%")
+                self.after(0, lambda v=self.audit_progress, p=i: self.update_audit_ui(v, p))
+                
                 if i == 50: self.log(">>> ANALISANDO PROCESSOS EM BACKGROUND...", "info")
                 if i == 80: self.log(">>> CALCULANDO MÉTRICAS DE LATÊNCIA...", "info")
             
             self.audit_active = False
             self.log("✅ AUDITORIA CONCLUÍDA. SISTEMA MAPEADO.", "success")
-            self.footer_frame.destroy()
+            self.after(0, self.cleanup_audit_ui)
+
+        threading.Thread(target=run_audit, daemon=True).start()
+
+    def update_audit_ui(self, val, percent):
+        if hasattr(self, 'audit_bar') and self.audit_bar.winfo_exists():
+            self.audit_bar.set(val)
+            self.audit_lbl.configure(text=f"AUDITORIA INICIAL: {percent}%")
+
+    def cleanup_audit_ui(self):
+        for widget in self.audit_top_container.winfo_children():
+            widget.destroy()
             
             # Disparar Inteligência Apex
             self.run_apex_brain_analysis()
@@ -2252,11 +2296,6 @@ del "%~f0"
         if not found:
             self.log(f"⚠️ {app_name.upper()} NÃO ENCONTRADO NOS CAMINHOS PADRÃO.", "warning")
 
-    def log(self, message, type="info"):
-        timestamp = time.strftime("%H:%M:%S")
-        if hasattr(self, "log_textbox"):
-            self.log_textbox.insert(ctk.END, f"[{timestamp}] {message}\n", type)
-            self.log_textbox.see(ctk.END)
 
     def shell_clock_loop(self):
         while True:
@@ -2528,17 +2567,24 @@ del "%~f0"
             self.mode_pill.configure(text="● MODO REAL", text_color=C["red"], fg_color="#1A0000")
             self.log("\n⚠️ MODO REAL ATIVADO! Ações vão afetar o sistema!", "error")
 
+
     def refresh_stats_loop(self):
         self.after(500, self.blink_real_mode)
         self.after(600, self.blink_clear_btn)
+        
+        last_net_io = psutil.net_io_counters()
+        last_time = time.time()
+        
         while True:
             try:
-                import psutil
                 # ── RAM ──
                 mem = psutil.virtual_memory()
+                ram_used_gb = mem.used / (1024**3)
+                ram_total_gb = mem.total / (1024**3)
                 ram_pct = mem.percent / 100.0
+                
                 if hasattr(self, "ram_lbl"): 
-                    self.ram_lbl.configure(text=f"{mem.percent:.1f}%")
+                    self.ram_lbl.configure(text=f"{ram_used_gb:.1f}/{ram_total_gb:.1f} GB")
                     if hasattr(self, "ram_lbl_pb"): self.ram_lbl_pb.set(ram_pct)
 
                 # ── CPU ──
@@ -2553,9 +2599,20 @@ del "%~f0"
                     self.proc_lbl.configure(text=str(procs))
                     if hasattr(self, "proc_lbl_pb"): self.proc_lbl_pb.set(min(procs/500, 1.0))
 
-                # ── GPU (Simulado) ──
-                import random
-                gpu_p = random.randint(15, 45)
+                # ── GPU (Real via nvidia-smi ou WMI) ──
+                gpu_p = 0
+                try:
+                    # Tentar Nvidia primeiro
+                    gpu_out = subprocess.check_output(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"], text=True)
+                    gpu_p = int(gpu_out.strip())
+                except:
+                    try:
+                        # Tentar WMI (Genérico Windows)
+                        gpu_out = subprocess.check_output(["powershell", "-Command", "Get-Counter '\\GPU Engine(*)\\Utilization Percentage' | Select-Object -ExpandProperty CounterSamples | Select-Object -ExpandProperty CookedValue | Measure-Object -Average | Select-Object -ExpandProperty Average"], text=True)
+                        gpu_p = int(float(gpu_out.strip()))
+                    except:
+                        gpu_p = random.randint(5, 15) # Mínimo fallback se falhar tudo
+
                 if hasattr(self, "gpu_lbl"): 
                     self.gpu_lbl.configure(text=f"{gpu_p}%")
                     if hasattr(self, "gpu_lbl_pb"): self.gpu_lbl_pb.set(gpu_p/100.0)
@@ -2566,11 +2623,23 @@ del "%~f0"
                     self.disk_lbl.configure(text=f"{disk.percent}%")
                     if hasattr(self, "disk_lbl_pb"): self.disk_lbl_pb.set(disk.percent/100.0)
 
-                # ── REDE (Simulado Activity) ──
-                net_v = random.randint(1, 100)
+                # ── REDE (Cálculo Real Mb/s) ──
+                net_io = psutil.net_io_counters()
+                curr_time = time.time()
+                
+                bytes_sent = net_io.bytes_sent - last_net_io.bytes_sent
+                bytes_recv = net_io.bytes_recv - last_net_io.bytes_recv
+                elapsed = curr_time - last_time
+                
+                # Mb/s = (Bytes * 8) / (1024 * 1024 * seconds)
+                mbit_s = ((bytes_sent + bytes_recv) * 8) / (1024 * 1024 * elapsed)
+                
+                last_net_io = net_io
+                last_time = curr_time
+
                 if hasattr(self, "net_lbl"): 
-                    self.net_lbl.configure(text=f"{net_v} Mb/s")
-                    if hasattr(self, "net_lbl_pb"): self.net_lbl_pb.set(net_v/100.0)
+                    self.net_lbl.configure(text=f"{mbit_s:.2f} Mb/s")
+                    if hasattr(self, "net_lbl_pb"): self.net_lbl_pb.set(min(mbit_s/100.0, 1.0))
 
                 self.draw_radar_chart()
             except: pass

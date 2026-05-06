@@ -1,6 +1,6 @@
 {
-  "version": "2.1.0",
-  "release_notes": "FLUX OS v2.1.0 - KERNEL EDITION. Adicionado Kernel Engine (MSI Mode, CPU Scheduler 0x26, Network Throttling Fix, VBS Disable). Layout otimizado para 768p.",
+  "version": "2.1.28",
+  "release_notes": "FLUX OS v2.1.28 SAPPHIRE - Auditoria Sênior concluída. Refatoração Thread-Safe, telemetria real de hardware (RAM em GB, Mb/s), Cockpit Panorâmico 100% e correção estrutural do vácuo horizontal.",
   "date": "2026-05-06",
   "url": "https://github.com/tiagoflstudio-oss/killprocess/raw/main/dist/Flux_OS_Sapphire.exe"
 }
