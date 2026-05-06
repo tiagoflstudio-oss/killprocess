@@ -628,7 +628,6 @@ class PremiumKillprocessApp(ctk.CTk):
             self.log_textbox.insert("end", text + "\n")
         self.log_textbox.see("end")
         
-        # Ativa o alerta de limpeza quando algo é logado
         if "✅" in text or "✔️" in text:
             self.pending_clear = True
 
@@ -638,13 +637,16 @@ class PremiumKillprocessApp(ctk.CTk):
         self.clear_log_btn.configure(text_color=C["muted"])
 
     def create_dashboard_tab(self):
-        # Usando ScrollableFrame para que tudo caiba na tela
+        # Usando ScrollableFrame com expansão total para o cockpit panorâmico
         tab = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent")
         self.tabs["dashboard"] = tab
+        
+        # Truque para forçar a largura total no frame interno
+        tab.grid_columnconfigure(0, weight=1)
 
         # ── LINHA 1: Cabeçalho ──────────────────────────────────────────
         hdr = ctk.CTkFrame(tab, fg_color="transparent")
-        hdr.pack(fill="x", pady=(0, 10))
+        hdr.pack(fill="x", expand=True, pady=(0, 10))
         ctk.CTkLabel(hdr, text="CENTRO DE CONTROLE", font=self.title_font,
                      text_color=C["text"]).pack(side="left")
         
@@ -653,17 +655,17 @@ class PremiumKillprocessApp(ctk.CTk):
             text_color=C["accent"], fg_color="#051408", corner_radius=6, padx=10, pady=3)
         self.status_val_lbl.pack(side="right")
 
-        # ── LINHA 2: Seletor de Níveis (PANORÂMICO / FULL WIDTH) ────────
+        # ── LINHA 2: Seletor de Níveis (PANORÂMICO TOTAL) ───────────────
         lvl_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1,
                                  border_color=C["border"], corner_radius=15)
-        lvl_card.pack(fill="x", pady=(0, 10))
+        lvl_card.pack(fill="x", expand=True, pady=(0, 10))
 
         ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO (STATUS DO KERNEL)",
                      font=ctk.CTkFont("Segoe UI", 9, "bold"),
                      text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(8, 4))
 
         self.lights_frame = ctk.CTkFrame(lvl_card, fg_color="transparent")
-        self.lights_frame.pack(fill="x", padx=15, pady=(0, 6))
+        self.lights_frame.pack(fill="x", expand=True, padx=15, pady=(0, 6))
 
         self.level_indicators = {}
         self.level_checkboxes_dashboard = {}
@@ -676,7 +678,7 @@ class PremiumKillprocessApp(ctk.CTk):
         def update_desc(txt): self.level_desc_lbl.configure(text=txt)
 
         levels_data = [
-            (1, "N1", "Apps", "#00FF88", "Apps em segundo plano."),
+            (1, "N1", "Apps", "#00FF88", "Fecha navegadores e apps em segundo plano."),
             (2, "N2", "Print", "#00FFB2", "Impressora e manutenção."),
             (3, "N3", "Telemetria", "#FFFF00", "Telemetria e diagnósticos."),
             (4, "N4", "Xbox/BT", "#FF8000", "Xbox Live e Bluetooth."),
@@ -692,7 +694,7 @@ class PremiumKillprocessApp(ctk.CTk):
         col_idx = 0
         for num, lvl_id, name, color, desc in levels_data:
             f = ctk.CTkFrame(self.lights_frame, fg_color="transparent")
-            f.grid(row=row_idx, column=col_idx, sticky="w", padx=4, pady=2)
+            f.grid(row=row_idx, column=col_idx, sticky="nsew", padx=4, pady=2)
             cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 9, "bold"),
                                   fg_color=color, hover_color=color, width=16,
                                   command=lambda d=desc: update_desc(d))
@@ -708,9 +710,9 @@ class PremiumKillprocessApp(ctk.CTk):
                 row_idx += 1
         self.lights_frame.grid_columnconfigure((0,1,2,3,4), weight=1)
 
-        # ── LINHA 3: Métricas de Telemetria (Grade 2x3 Simétrica) ──────
+        # ── LINHA 3: Métricas de Telemetria (Grid 2x3 Expandido) ──────
         m_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        m_frame.pack(fill="x", pady=(0, 10))
+        m_frame.pack(fill="x", expand=True, pady=(0, 10))
         def add_m_card(title, attr, color, r, c):
             card = ctk.CTkFrame(m_frame, fg_color=C["card"], border_width=1, 
                                  border_color=C["border"], corner_radius=15)
@@ -736,21 +738,18 @@ class PremiumKillprocessApp(ctk.CTk):
 
         # ── LINHA 4: Botões de Ação + Radar ─────────────────────────────
         row3 = ctk.CTkFrame(tab, fg_color="transparent")
-        row3.pack(fill="x", pady=(0, 4))
-        row3.grid_columnconfigure(0, weight=3)
+        row3.pack(fill="x", expand=True, pady=(0, 4))
+        row3.grid_columnconfigure(0, weight=2)
         row3.grid_columnconfigure(1, weight=1)
 
         act = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1,
                             border_color=C["border"], corner_radius=10)
         act.grid(row=0, column=0, padx=(0, 6), sticky="nsew")
-        ctk.CTkLabel(act, text="▌ AÇÕES RÁPIDAS (ONE-CLICK)",
-                     font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                     text_color=C["cyan"]).pack(anchor="w", padx=14, pady=(10, 8))
+        ctk.CTkLabel(act, text="▌ AÇÕES RÁPIDAS (ONE-CLICK)", font=ctk.CTkFont("Segoe UI", 9, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=14, pady=(10, 8))
 
         btn_grid = ctk.CTkFrame(act, fg_color="transparent")
         btn_grid.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         btn_grid.grid_columnconfigure((0, 1, 2), weight=1, uniform="buttons")
-        btn_grid.grid_rowconfigure(0, weight=1)
 
         self.full_opt_btn = ctk.CTkButton(
             btn_grid, text="🚀\nOTIMIZAR TUDO", fg_color="#0D47A1", hover_color="#1565C0",
@@ -804,64 +803,28 @@ class PremiumKillprocessApp(ctk.CTk):
         self.radar_canvas = ctk.CTkCanvas(radar_card, bg=C["card"], highlightthickness=0, width=240, height=120)
         self.radar_canvas.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         self.draw_radar_chart()
-        self.draw_radar_chart()
 
-        # ── LINHA 4: Manutenção Avançada (Central de Comando) ────────────────
-        row4 = ctk.CTkFrame(tab, fg_color="transparent")
-        row4.pack(fill="x", pady=(4, 0))
+        # ── LINHA 5: Manutenção Avançada ────────────────────────────────
+        m_adv_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
+        m_adv_card.pack(fill="x", expand=True, pady=(6, 20))
+        ctk.CTkLabel(m_adv_card, text="▌ MANUTENÇÃO AVANÇADA", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(12, 10))
         
-        m_adv_card = ctk.CTkFrame(row4, fg_color=C["card"], border_width=1,
-                                   border_color=C["border"], corner_radius=10)
-        m_adv_card.pack(fill="x")
-
-        ctk.CTkLabel(m_adv_card, text="▌ MANUTENÇÃO AVANÇADA",
-                     font=ctk.CTkFont("Segoe UI", 10, "bold"),
-                     text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(12, 10))
-
         m_grid = ctk.CTkFrame(m_adv_card, fg_color="transparent")
-        m_grid.pack(fill="x", padx=15, pady=(0, 15))
+        m_grid.pack(fill="x", expand=True, padx=15, pady=(0, 15))
         m_grid.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
-
-        # Estilo dos botões de manutenção
-        m_btn_style = {
-            "height": 45,
-            "corner_radius": 8,
-            "font": ctk.CTkFont("Segoe UI", 11, "bold"),
-            "border_width": 1,
-            "border_color": C["border"],
-            "fg_color": "#0F172A",
-            "hover_color": "#1E293B"
-        }
-
-        # 1. Limpeza
-        self.clean_btn = ctk.CTkButton(
-            m_grid, text="🧹 LIMPEZA DISCO", **m_btn_style, text_color="#10B981",
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("clean_temp",)).start())
+        
+        m_btn_style = {"height": 45, "corner_radius": 8, "font": ctk.CTkFont("Segoe UI", 11, "bold"), "border_width": 1, "border_color": C["border"], "fg_color": "#0F172A", "hover_color": "#1E293B"}
+        self.clean_btn = ctk.CTkButton(m_grid, text="🧹 LIMPEZA DISCO", **m_btn_style, text_color="#10B981", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("clean_temp",)).start())
         self.clean_btn.grid(row=0, column=0, padx=5, sticky="nsew")
-
-        # 2. Flush DNS
-        self.dns_btn = ctk.CTkButton(
-            m_grid, text="🌐 FLUSH DNS", **m_btn_style, text_color="#3B82F6",
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("flush_dns",)).start())
+        self.dns_btn = ctk.CTkButton(m_grid, text="🌐 FLUSH DNS", **m_btn_style, text_color="#3B82F6", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("flush_dns",)).start())
         self.dns_btn.grid(row=0, column=1, padx=5, sticky="nsew")
-
-        # 3. Plano Ultimate
-        self.power_btn = ctk.CTkButton(
-            m_grid, text="⚡ PLANO ULTIMATE", **m_btn_style, text_color="#FBBF24",
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("power_plan",)).start())
+        self.power_btn = ctk.CTkButton(m_grid, text="⚡ PLANO ULTIMATE", **m_btn_style, text_color="#FBBF24", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("power_plan",)).start())
         self.power_btn.grid(row=0, column=2, padx=5, sticky="nsew")
-
-        # 4. Flush RAM
-        self.ram_flush_btn = ctk.CTkButton(
-            m_grid, text="💾 LIMPAR RAM", **m_btn_style, text_color="#F8FAFC",
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("ram_flush",)).start())
+        
+        self.ram_flush_btn = ctk.CTkButton(m_grid, text="💾 LIMPAR RAM", **m_btn_style, text_color="#F8FAFC", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("ram_flush",)).start())
         self.ram_flush_btn.grid(row=0, column=3, padx=5, sticky="nsew")
-
-        # 5. KERNEL BOOST (NOVO)
-        self.kernel_boost_btn = ctk.CTkButton(
-            m_grid, text="🧠 KERNEL BOOST", **m_btn_style, text_color=C["cyan"],
-            command=lambda: threading.Thread(target=self.run_kernel_optimization, args=("apply_all",)).start())
-        self.kernel_boost_btn.configure(border_color=C["cyan"]) # Sobrescreve após a criação se necessário, ou apenas deixe o estilo base
+        
+        self.kernel_boost_btn = ctk.CTkButton(m_grid, text="🧠 KERNEL BOOST", **m_btn_style, text_color=C["cyan"], command=lambda: threading.Thread(target=self.run_kernel_optimization, args=("apply_all",)).start())
         self.kernel_boost_btn.grid(row=0, column=4, padx=5, sticky="nsew")
 
 
