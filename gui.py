@@ -246,57 +246,60 @@ class PremiumKillprocessApp(ctk.CTk):
                                    font=("Consolas", 12, "bold"), fill="#10B981")
 
             if step < 30:
-                splash.after(100, lambda: animate_k_minimal(step + 1))
+                splash.after(65, lambda: animate_k_minimal(step + 1)) # Reduzido para ~2s total
             else:
-                splash.after(500, lambda: [splash.destroy(), self.show_login_gate()]) # CHAMA O LOGIN
+                splash.after(300, lambda: [splash.destroy(), self.show_login_gate()]) # CHAMA O LOGIN
 
         animate_k_minimal()
 
     def show_login_gate(self):
-        """
-        Janela de Verificação de Licença (Apex Access Gate)
-        """
+        # Verificar se já está ativado
+        if os.path.exists("license.bin"):
+            self.deiconify()
+            return
+
         gate = ctk.CTkToplevel(self)
-        gate.title("APEX ACCESS GATE")
+        gate.title("APEX VIP ACCESS")
         gate.attributes("-topmost", True)
         
         # Centralizar
-        w, h = 400, 250
+        w, h = 450, 280
         sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
         gate.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
         gate.overrideredirect(True)
         gate.configure(fg_color=C["bg"])
 
         # Border Glow
-        frame = ctk.CTkFrame(gate, fg_color=C["card"], border_width=1, border_color=C["cyan"], corner_radius=10)
+        frame = ctk.CTkFrame(gate, fg_color=C["card"], border_width=1, border_color=C["cyan"], corner_radius=15)
         frame.pack(fill="both", expand=True, padx=2, pady=2)
 
-        ctk.CTkLabel(frame, text="🛡️ APEX SECURITY SYSTEM", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(pady=(20, 5))
-        ctk.CTkLabel(frame, text="INSIRA SUA CHAVE DE ACESSO", font=ctk.CTkFont("Segoe UI", 13, "bold"), text_color=C["text"]).pack(pady=5)
+        ctk.CTkLabel(frame, text="🛡️ VIP ACCESS REQUIRED", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(pady=(25, 5))
+        ctk.CTkLabel(frame, text="INSIRA SUA CHAVE VIP (16 DÍGITOS)", font=ctk.CTkFont("Segoe UI", 13, "bold"), text_color=C["text"]).pack(pady=5)
 
-        key_entry = ctk.CTkEntry(frame, width=300, height=40, font=("Consolas", 14), 
-                                 placeholder_text="XXXX-XXXX-XXXX", justify="center",
-                                 fg_color="#0F172A", border_color=C["border"])
+        key_entry = ctk.CTkEntry(frame, width=350, height=45, font=("Consolas", 15, "bold"), 
+                                 placeholder_text="XXXX-XXXX-XXXX-XXXX", justify="center",
+                                 fg_color="#050505", border_color=C["border"])
         key_entry.pack(pady=15)
         key_entry.focus_set()
 
         def validate():
-            # A SUA SENHA PERSONALIZADA:
-            SECRET_KEY = "BOCAMOLE"
+            VIP_KEY = "APEX-VIPS-2026-X9"
+            key = key_entry.get().strip().upper()
             
-            if key_entry.get().strip().upper() == SECRET_KEY:
-                self.log(">>> ACESSO AUTORIZADO. BEM-VINDO, OPERADOR.", "success")
+            if key == VIP_KEY:
+                with open("license.bin", "w") as f: f.write("ACTIVATED")
+                self.log("✅ ACESSO VIP AUTORIZADO!", "success")
                 gate.destroy()
-                self.deiconify() # Abre o HUD Original
+                self.deiconify()
             else:
                 import winsound
                 winsound.MessageBeep(winsound.MB_ICONHAND)
                 key_entry.configure(border_color=C["red"])
-                self.log(">>> ACESSO NEGADO: CHAVE INVÁLIDA.", "error")
+                self.log(">>> ACESSO NEGADO: CHAVE VIP INVÁLIDA.", "error")
 
-        btn_verify = ctk.CTkButton(frame, text="AUTENTICAR", font=ctk.CTkFont("Segoe UI", 12, "bold"),
+        btn_verify = ctk.CTkButton(frame, text="ATIVAR AGORA", font=ctk.CTkFont("Segoe UI", 12, "bold"),
                                    fg_color=C["cyan"], text_color="#000000", hover_color=C["accent"],
-                                   height=35, command=validate)
+                                   height=40, command=validate)
         btn_verify.pack(pady=5)
 
         # Atalho Enter
@@ -2141,8 +2144,8 @@ class PremiumKillprocessApp(ctk.CTk):
                 orig_fg = btn.cget("fg_color")
                 orig_border = btn.cget("border_color")
                 
-                # Pulsação intensa e rápida (Foco total do usuário)
-                for _ in range(12): # 6 ciclos
+                # Pulsação intensa e rápida (10 segundos de duração)
+                for _ in range(50): # 25 ciclos de 0.4s = 10s
                     # Estado ON (Neon)
                     btn.configure(fg_color="#00CCFF", border_color="#FFFFFF")
                     time.sleep(0.2)
