@@ -5,12 +5,12 @@ import shutil
 
 def build():
     print("="*60)
-    print(" KILLPROCESS - BUILD SYSTEM (PyInstaller)")
+    print(" FLUX OS - BUILD SYSTEM (PyInstaller)")
     print("="*60)
     
     # Nome do arquivo principal e do executável
     main_script = "gui.py"
-    exe_name = "Killprocess_Sapphire"
+    exe_name = "Flux_OS_Sapphire"
     
     # Verificar se o PyInstaller está instalado
     try:

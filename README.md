@@ -1,6 +1,6 @@
-# 🚀 Killprocess - Otimizador Supremo do Windows para Gamers
+# 🚀 FLUX OS - Otimizador Supremo do Windows para Gamers
 
-O **Killprocess** é um aplicativo projetado para desativar serviços e processos em segundo plano do Windows, liberando o máximo de CPU, Memória RAM e reduzindo a latência para jogos.
+O **FLUX OS** é um aplicativo projetado para desativar serviços e processos em segundo plano do Windows, liberando o máximo de CPU, Memória RAM e reduzindo a latência para jogos.
 
 ---
 
@@ -9,7 +9,7 @@ O **Killprocess** é um aplicativo projetado para desativar serviços e processo
 O sistema de otimização foi expandido para **7 níveis**, permitindo que o usuário escolha a agressividade com que os processos serão encerrados.
 
 ### 🟢 Nível 1: Aplicativos & Bloatwares
-Focado em fechar softwares em segundo plano que consomem RAM e CPU.
+Focado em fechar softwares em segundo plano que consumem RAM e CPU.
 - **Exemplos:** Google Chrome, MS Edge, Discord, OneDrive, WhatsApp, Teams, Skype.
 
 ### 🟡 Nível 2: Impressão & Manutenção
@@ -48,7 +48,7 @@ Para gerar uma nova versão do executável (`.exe`) de forma automatizada, utili
     ```bash
     python build.py
     ```
-4.  O executável final será gerado na pasta `dist/` com o nome **Killprocess_Sapphire.exe**.
+4.  O executável final será gerado na pasta `dist/` com o nome **Flux_OS_Sapphire.exe**.
 
 > [!IMPORTANT]
 > O executável gerado solicitará automaticamente privilégios de Administrador ao ser iniciado, garantindo que todas as otimizações de Kernel e Registro funcionem corretamente.

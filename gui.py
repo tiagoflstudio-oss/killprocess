@@ -45,7 +45,7 @@ C = {
 }
 
 # =====================================================================
-# 🚀 Killprocess - Advanced Sapphire Edition (Fase 3 & 4)
+# 🚀 FLUX OS - Otimizador Supremo do Windows para Gamers
 # =====================================================================
 
 ctk.set_appearance_mode("Dark")
@@ -259,7 +259,7 @@ class PremiumKillprocessApp(ctk.CTk):
             return
 
         gate = ctk.CTkToplevel(self)
-        gate.title("APEX VIP ACCESS")
+        gate.title("FLUX OS VIP ACCESS")
         gate.attributes("-topmost", True)
         
         # Centralizar
@@ -307,7 +307,7 @@ class PremiumKillprocessApp(ctk.CTk):
 
     def __init__(self):
         super().__init__()
-        self.title("KILLPROCESS APEX EDITION")
+        self.title("FLUX OS - SAPPHIRE EDITION")
         
         # Definições de Resolução
         self.resolutions = {
@@ -460,7 +460,7 @@ class PremiumKillprocessApp(ctk.CTk):
         left_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
         left_container.pack(side="left", padx=20, fill="y")
 
-        logo_lbl = ctk.CTkLabel(left_container, text="✨ KILLPROCESS ", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["accent"])
+        logo_lbl = ctk.CTkLabel(left_container, text="✨ FLUX OS ", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["accent"])
         logo_lbl.pack(side="left")
         sub_lbl = ctk.CTkLabel(left_container, text="APEX", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["muted"])
         sub_lbl.pack(side="left", padx=(0, 20), pady=(4,0))
@@ -552,7 +552,7 @@ class PremiumKillprocessApp(ctk.CTk):
         add_btn.pack(pady=10)
 
         # --- Versão no Rodapé ---
-        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"APEX HUD v{VERSION}", 
+        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"FLUX OS v{VERSION}", 
                                font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"])
         self.ver_lbl.pack(side="bottom", pady=10)
 
@@ -601,7 +601,7 @@ class PremiumKillprocessApp(ctk.CTk):
         self.log_textbox.tag_config("warning", foreground="#FACC15") # Amarelo/Ouro
         self.log_textbox.tag_config("error", foreground="#EF4444")   # Vermelho
         
-        self.log_textbox.insert("end", ">>> Killprocess APEX inicializado.\n" + "="*30 + "\n", "info")
+        self.log_textbox.insert("end", ">>> FLUX OS inicializado.\n" + "="*30 + "\n", "info")
 
     def log(self, text, tag=None):
         if tag:
@@ -1361,7 +1361,7 @@ class PremiumKillprocessApp(ctk.CTk):
         ab_lbl = ctk.CTkLabel(tab, text="Módulo Auto-Boost (Automação Proativa)", font=self.title_font, text_color="#F8FAFC")
         ab_lbl.pack(anchor="w", pady=(5, 2))
 
-        ab_sub = ctk.CTkLabel(tab, text="Deixe o Killprocess monitorar seus jogos e aplicar o nível de otimização automaticamente em tempo real.", font=self.label_font, text_color="#94A3B8")
+        ab_sub = ctk.CTkLabel(tab, text="Deixe o FLUX OS monitorar seus jogos e aplicar o nível de otimização automaticamente em tempo real.", font=self.label_font, text_color="#94A3B8")
         ab_sub.pack(anchor="w", pady=(0, 15))
 
         # Painel de Status
@@ -1858,7 +1858,6 @@ class PremiumKillprocessApp(ctk.CTk):
             self.log("[SIMULAÇÃO] MSI Mode ativado para a GPU com prioridade ALTA.", "success")
             return
         
-        # Lógica para detectar GPU e ativar MSI Mode via PowerShell
         ps_script = """
         $gpus = Get-PnpDevice -Class Display -Status OK
         foreach ($gpu in $gpus) {
@@ -2009,7 +2008,7 @@ class PremiumKillprocessApp(ctk.CTk):
         def run():
             try:
                 import subprocess
-                cmd = 'Checkpoint-Computer -Description "Apex HUD Restore Point" -RestorePointType "MODIFY_SETTINGS"'
+                cmd = 'Checkpoint-Computer -Description "FLUX OS Restore Point" -RestorePointType "MODIFY_SETTINGS"'
                 result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True, shell=True)
                 if result.returncode == 0:
                     self.log("✅ PONTO DE RESTAURAÇÃO CRIADO COM SUCESSO!", "success")
@@ -2161,7 +2160,7 @@ class PremiumKillprocessApp(ctk.CTk):
         threading.Thread(target=pulse, daemon=True).start()
 
     def check_for_updates(self):
-        self.log("🌐 [Update System]: CONSULTANDO SERVIDOR APEX...", "info")
+        self.log("🌐 [Update System]: CONSULTANDO SERVIDOR...", "info")
         
         # URL RAW DO SEU MANIFESTO NO GITHUB
         MANIFEST_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json"
@@ -2185,7 +2184,7 @@ class PremiumKillprocessApp(ctk.CTk):
                     
                     # Perguntar ao usuário
                     from tkinter import messagebox
-                    if messagebox.askyesno("Apex Update", f"Nova versão v{latest} disponível!\n\n{data.get('changelog', '')}\n\nDeseja baixar e instalar agora?"):
+                    if messagebox.askyesno("FLUX OS Update", f"Nova versão v{latest} disponível!\n\n{data.get('changelog', '')}\n\nDeseja baixar e instalar agora?"):
                         self.perform_update(data["url"])
                 else:
                     self.log("✅ [Update System]: SEU HUD ESTÁ NA VERSÃO MAIS RECENTE.", "success")
@@ -2211,7 +2210,7 @@ class PremiumKillprocessApp(ctk.CTk):
                     self.log("⚠️ [Update System]: URL DE DOWNLOAD NÃO CONFIGURADA NO MANIFESTO.", "warning")
                     return
 
-                temp_exe = "apex_update_temp.exe"
+                temp_exe = "flux_os_update_temp.exe"
                 urllib.request.urlretrieve(download_url, temp_exe)
                 self.log("🚀 [Update System]: DOWNLOAD CONCLUÍDO. PREPARANDO SUBSTITUIÇÃO...", "success")
 
@@ -2221,9 +2220,9 @@ class PremiumKillprocessApp(ctk.CTk):
                 
                 bat_content = f"""
 @echo off
-title Killprocess Updater
+title FLUX OS Updater
 echo ========================================
-echo   ATUALIZANDO KILLPROCESS SAPPHIRE...
+echo   ATUALIZANDO FLUX OS...
 echo ========================================
 echo.
 echo Finalizando processos ativos...
@@ -2385,7 +2384,7 @@ del "%~f0"
         wl_lbl = ctk.CTkLabel(tab, text="Gerenciador de Whitelist (Processos Protegidos)", font=self.title_font, text_color="#F8FAFC")
         wl_lbl.pack(anchor="w", pady=(5, 2))
 
-        wl_sub = ctk.CTkLabel(tab, text="Processos adicionados aqui nunca serão encerrados pelo Killprocess, garantindo estabilidade.", font=self.label_font, text_color="#94A3B8")
+        wl_sub = ctk.CTkLabel(tab, text="Processos adicionados aqui nunca serão encerrados pelo FLUX OS, garantindo estabilidade.", font=self.label_font, text_color="#94A3B8")
         wl_sub.pack(anchor="w", pady=(0, 20))
 
         # Adicionar novo processo
@@ -2461,7 +2460,7 @@ del "%~f0"
     def load_whitelist(self):
         if not os.path.exists("whitelist.txt"):
             # Whitelist padrão
-            return ["killprocess.exe", "gui.exe", "python.exe", "svchost.exe", "explorer.exe", "taskmgr.exe"]
+            return ["flux_os.exe", "gui.exe", "python.exe", "svchost.exe", "explorer.exe", "taskmgr.exe"]
         try:
             with open("whitelist.txt", "r", encoding="utf-8") as f:
                 return [l.strip().lower() for l in f.readlines() if l.strip()]
@@ -2802,10 +2801,10 @@ del "%~f0"
             
             image = Image.open(icon_p)
             menu = pystray.Menu(
-                item('Abrir Killprocess', self.show_window, default=True),
+                item('Abrir FLUX OS', self.show_window, default=True),
                 item('Sair Completamente', self.quit_app)
             )
-            self.tray_icon = pystray.Icon("killprocess", image, "Killprocess Sapphire", menu)
+            self.tray_icon = pystray.Icon("flux_os", image, "FLUX OS Sapphire", menu)
             
             # Rodar tray em thread separada
             threading.Thread(target=self.tray_icon.run, daemon=True).start()
