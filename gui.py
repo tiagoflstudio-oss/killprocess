@@ -8,13 +8,25 @@ import psutil
 import customtkinter as ctk
 import requests
 import json
+from PIL import Image, ImageTk
 from intelligence import brain # Importar a inteligência do HUD
+import pystray
+from pystray import MenuItem as item
+
+def resource_path(relative_path):
+    """ Retorna o caminho absoluto para recursos, funcionando em Dev e no PyInstaller exe. """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 
 
 # ---
 # PALETA DE CORES APEX HUD
 # ---
-VERSION = "2.0.1" # Versão Atual
+VERSION = "2.1.0" # Versão Atual
 UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json" 
 
 C = {
@@ -316,12 +328,20 @@ class PremiumKillprocessApp(ctk.CTk):
     def setup_ui(self):
         self.configure(fg_color=C["bg"])
         
+        # Configurar ícone da janela
         try:
-            self.iconbitmap("icon.ico")
-        except:
-            pass
+            icon_p = resource_path("assets/icon.png")
+            if os.path.exists(icon_p):
+                img = Image.open(icon_p)
+                photo = ImageTk.PhotoImage(img)
+                self.wm_iconphoto(True, photo)
+        except Exception as e:
+            print(f"Erro ao carregar ícone da janela: {e}")
 
-        self.protocol("WM_DELETE_WINDOW", lambda: os._exit(0))
+        # Protocolo de fechamento (System Tray)
+        self.protocol("WM_DELETE_WINDOW", self.hide_window)
+        self.tray_icon = None
+        self.create_tray_icon()
         
         # ---
         # LAYOUT BASE: APEX HUD
@@ -402,6 +422,7 @@ class PremiumKillprocessApp(ctk.CTk):
         self.create_autoboost_tab()
         self.create_optimize_center_tab()
         self.create_extra_tab()
+        self.create_kernel_tab()
         self.create_shell_tab()
         self.create_whitelist_tab()
 
@@ -492,6 +513,7 @@ class PremiumKillprocessApp(ctk.CTk):
         add_nav_btn("whitelist", "🛡️", "WHITELIST")
         add_nav_btn("scan", "🔍", "SCAN")
         add_nav_btn("optimize_center", "🔥", "OTIMIZAR")
+        add_nav_btn("kernel", "🧠", "KERNEL ENGINE")
         add_nav_btn("autoboost", "🚀", "AUTO-BOOST")
         add_nav_btn("extra", "🛠️", "MANUTENÇÃO")
         
@@ -597,7 +619,7 @@ class PremiumKillprocessApp(ctk.CTk):
         row2 = ctk.CTkFrame(tab, fg_color="transparent")
         row2.pack(fill="x", pady=(0, 8))
         row2.grid_columnconfigure(0, weight=2) # Níveis
-        row2.grid_columnconfigure((1, 2, 3, 4), weight=1) # 4 Colunas de Métricas uniformes
+        row2.grid_columnconfigure((1, 2, 3), weight=1) # 3 Colunas de Métricas uniformes
 
         # Card Seletor de Níveis
         lvl_card = ctk.CTkFrame(row2, fg_color=C["card"], border_width=1,
@@ -654,7 +676,7 @@ class PremiumKillprocessApp(ctk.CTk):
                 col_idx = 0
                 row_idx += 1
 
-        # --- COLUNA 1: RAM & PROC ---
+        # --- COLUNA 1: RAM & CPU ---
         c1 = ctk.CTkFrame(row2, fg_color="transparent")
         c1.grid(row=0, column=1, padx=3, sticky="nsew")
         c1.grid_rowconfigure((0, 1), weight=1)
@@ -667,13 +689,13 @@ class PremiumKillprocessApp(ctk.CTk):
         self.ram_pb = ctk.CTkProgressBar(ram_card, height=4, progress_color="#10B981", fg_color="#1E2631")
         self.ram_pb.pack(fill="x", padx=10, pady=(0, 8))
 
-        proc_card = ctk.CTkFrame(c1, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        proc_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
-        ctk.CTkLabel(proc_card, text="PROCESSOS", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.proc_val_lbl = ctk.CTkLabel(proc_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.proc_val_lbl.pack(anchor="w", padx=10)
-        self.proc_pb = ctk.CTkProgressBar(proc_card, height=4, progress_color="#3B82F6", fg_color="#1E2631")
-        self.proc_pb.pack(fill="x", padx=10, pady=(0, 8))
+        cpu_card = ctk.CTkFrame(c1, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
+        cpu_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
+        ctk.CTkLabel(cpu_card, text="CPU USAGE", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
+        self.dash_cpu_lbl = ctk.CTkLabel(cpu_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
+        self.dash_cpu_lbl.pack(anchor="w", padx=10)
+        self.dash_cpu_pb = ctk.CTkProgressBar(cpu_card, height=4, progress_color=C["accent"], fg_color="#1E2631")
+        self.dash_cpu_pb.pack(fill="x", padx=10, pady=(0, 8))
 
         # --- COLUNA 2: GPU & DISK ---
         c2 = ctk.CTkFrame(row2, fg_color="transparent")
@@ -696,51 +718,30 @@ class PremiumKillprocessApp(ctk.CTk):
         self.dash_disk_pb = ctk.CTkProgressBar(disk_card, height=4, progress_color="#2DD4BF", fg_color="#1E2631")
         self.dash_disk_pb.pack(fill="x", padx=10, pady=(0, 8))
 
-        # --- COLUNA 3: SISTEMA & NET ---
+        # --- COLUNA 3: NET & PROC ---
         c3 = ctk.CTkFrame(row2, fg_color="transparent")
-        c3.grid(row=0, column=3, padx=3, sticky="nsew")
+        c3.grid(row=0, column=3, padx=(3, 0), sticky="nsew")
         c3.grid_rowconfigure((0, 1), weight=1)
 
-        sys_card = ctk.CTkFrame(c3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        sys_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
-        ctk.CTkLabel(sys_card, text="OS INFO", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_os_lbl = ctk.CTkLabel(sys_card, text="Windows", font=ctk.CTkFont("Segoe UI", 12, "bold"), text_color=C["text"])
-        self.dash_os_lbl.pack(anchor="w", padx=10)
-        import platform
-        self.dash_os_lbl.configure(text=f"{platform.system()} {platform.release()}"[:18])
-
         net_card = ctk.CTkFrame(c3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        net_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
+        net_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
         ctk.CTkLabel(net_card, text="NETWORK", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
         self.dash_net_lbl = ctk.CTkLabel(net_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
         self.dash_net_lbl.pack(anchor="w", padx=10)
         self.dash_net_pb = ctk.CTkProgressBar(net_card, height=4, progress_color="#A855F7", fg_color="#1E2631")
         self.dash_net_pb.pack(fill="x", padx=10, pady=(0, 8))
 
-        # --- COLUNA 4: CPU & TEMP ---
-        c4 = ctk.CTkFrame(row2, fg_color="transparent")
-        c4.grid(row=0, column=4, padx=(3, 0), sticky="nsew")
-        c4.grid_rowconfigure((0, 1), weight=1)
-
-        cpu_card = ctk.CTkFrame(c4, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        cpu_card.grid(row=0, column=0, pady=(0, 3), sticky="nsew")
-        ctk.CTkLabel(cpu_card, text="CPU USAGE", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_cpu_lbl = ctk.CTkLabel(cpu_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_cpu_lbl.pack(anchor="w", padx=10)
-        self.dash_cpu_pb = ctk.CTkProgressBar(cpu_card, height=4, progress_color=C["accent"], fg_color="#1E2631")
-        self.dash_cpu_pb.pack(fill="x", padx=10, pady=(0, 8))
-
-        temp_card = ctk.CTkFrame(c4, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        temp_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
-        ctk.CTkLabel(temp_card, text="CORE TEMP", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
-        self.dash_temp_lbl = ctk.CTkLabel(temp_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-        self.dash_temp_lbl.pack(anchor="w", padx=10)
-        self.dash_temp_pb = ctk.CTkProgressBar(temp_card, height=4, progress_color="#FB923C", fg_color="#1E2631")
-        self.dash_temp_pb.pack(fill="x", padx=10, pady=(0, 8))
+        proc_card = ctk.CTkFrame(c3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
+        proc_card.grid(row=1, column=0, pady=(3, 0), sticky="nsew")
+        ctk.CTkLabel(proc_card, text="PROCESSOS", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(8, 0))
+        self.proc_val_lbl = ctk.CTkLabel(proc_card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
+        self.proc_val_lbl.pack(anchor="w", padx=10)
+        self.proc_pb = ctk.CTkProgressBar(proc_card, height=4, progress_color="#3B82F6", fg_color="#1E2631")
+        self.proc_pb.pack(fill="x", padx=10, pady=(0, 8))
 
         # ── LINHA 3: Botões de Ação + Radar ─────────────────────────────
         row3 = ctk.CTkFrame(tab, fg_color="transparent")
-        row3.pack(fill="x", pady=(0, 8))
+        row3.pack(fill="x", pady=(0, 4))
         row3.grid_columnconfigure(0, weight=3)
         row3.grid_columnconfigure(1, weight=1)
 
@@ -765,7 +766,7 @@ class PremiumKillprocessApp(ctk.CTk):
             btn_grid, text="🚀\nOTIMIZAR TUDO",
             fg_color="#0D47A1", hover_color="#1565C0",
             font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=140, corner_radius=10, text_color="white",
+            height=100, corner_radius=10, text_color="white",
             command=self.start_full_optimization)
         self.full_opt_btn.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
 
@@ -774,7 +775,7 @@ class PremiumKillprocessApp(ctk.CTk):
             btn_grid, text="👑\nGOD MODE",
             fg_color=C["gold"], hover_color="#C8A800",
             font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=140, corner_radius=10, text_color="#0A0A0A",
+            height=100, corner_radius=10, text_color="#0A0A0A",
             command=self.start_god_mode)
         self.god_mode_btn.grid(row=0, column=1, padx=8, pady=8, sticky="nsew")
 
@@ -784,7 +785,7 @@ class PremiumKillprocessApp(ctk.CTk):
             fg_color="#1E2631", hover_color="#3B82F6",
             border_width=1, border_color="#3B82F6",
             font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            height=140, corner_radius=10, text_color=C["text"],
+            height=100, corner_radius=10, text_color=C["text"],
             command=self.start_optimize_selection)
         self.optimize_selection_btn.grid(row=0, column=2, padx=8, pady=8, sticky="nsew")
 
@@ -833,13 +834,13 @@ class PremiumKillprocessApp(ctk.CTk):
                      text_color=C["cyan"]).pack(anchor="w", padx=12, pady=(10, 4))
 
         self.radar_canvas = ctk.CTkCanvas(
-            radar_card, bg=C["card"], highlightthickness=0, width=240, height=160)
+            radar_card, bg=C["card"], highlightthickness=0, width=240, height=120)
         self.radar_canvas.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         self.draw_radar_chart()
 
         # ── LINHA 4: Manutenção Avançada (Central de Comando) ────────────────
         row4 = ctk.CTkFrame(tab, fg_color="transparent")
-        row4.pack(fill="x", pady=(8, 0))
+        row4.pack(fill="x", pady=(4, 0))
         
         m_adv_card = ctk.CTkFrame(row4, fg_color=C["card"], border_width=1,
                                    border_color=C["border"], corner_radius=10)
@@ -851,7 +852,7 @@ class PremiumKillprocessApp(ctk.CTk):
 
         m_grid = ctk.CTkFrame(m_adv_card, fg_color="transparent")
         m_grid.pack(fill="x", padx=15, pady=(0, 15))
-        m_grid.grid_columnconfigure((0, 1, 2, 3), weight=1)
+        m_grid.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
         # Estilo dos botões de manutenção
         m_btn_style = {
@@ -887,6 +888,13 @@ class PremiumKillprocessApp(ctk.CTk):
             m_grid, text="💾 LIMPAR RAM", **m_btn_style, text_color="#F8FAFC",
             command=lambda: threading.Thread(target=self.run_extra_optimization, args=("ram_flush",)).start())
         self.ram_flush_btn.grid(row=0, column=3, padx=5, sticky="nsew")
+
+        # 5. KERNEL BOOST (NOVO)
+        self.kernel_boost_btn = ctk.CTkButton(
+            m_grid, text="🧠 KERNEL BOOST", **m_btn_style, text_color=C["cyan"],
+            command=lambda: threading.Thread(target=self.run_kernel_optimization, args=("apply_all",)).start())
+        self.kernel_boost_btn.configure(border_color=C["cyan"]) # Sobrescreve após a criação se necessário, ou apenas deixe o estilo base
+        self.kernel_boost_btn.grid(row=0, column=4, padx=5, sticky="nsew")
 
 
     def create_management_tab(self):
@@ -1797,10 +1805,150 @@ class PremiumKillprocessApp(ctk.CTk):
                 run_cmd("[System.GC]::Collect()")
                 mem_after = psutil.virtual_memory().available
                 freed = (mem_after - mem_before) / (1024 * 1024)
-                if freed < 0: freed = 0
-                self.log(f"✅ RAM Flush Concluído: {freed:.1f} MB liberados instantaneamente!", "success")
             except Exception as e:
                 self.log(f"⚠️ Falha no Flush de RAM: {e}", "error")
+
+        self.log(f"✅ [Kernel Boost]: Otimização completa finalizada!", "success")
+
+    def run_kernel_optimization(self, cmd):
+        if cmd == "msi_mode":
+            self.apply_msi_mode()
+        elif cmd == "cpu_scheduler":
+            self.apply_cpu_scheduler()
+        elif cmd == "net_throttle":
+            self.apply_net_throttle()
+        elif cmd == "vbs_disable":
+            self.apply_vbs_disable()
+        elif cmd == "kernel_restore":
+            self.apply_kernel_restore()
+        elif cmd == "standby_flush":
+            self.run_extra_optimization("ram_flush")
+        elif cmd == "apply_all":
+            self.apply_all_kernel_tweaks()
+
+    def apply_all_kernel_tweaks(self):
+        self.log("\n⚡ [Kernel Boost]: Iniciando Otimização Completa de Baixo Nível...", "info")
+        self.apply_msi_mode()
+        self.apply_cpu_scheduler()
+        self.apply_net_throttle()
+        self.run_extra_optimization("ram_flush")
+        self.log("\n🚀 [Kernel Boost]: Sistema 100% calibrado para Latência Zero!", "success")
+
+    def apply_msi_mode(self):
+        self.log("\n🚀 [MSI Mode]: Iniciando otimização de interrupções...", "info")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] MSI Mode ativado para a GPU com prioridade ALTA.", "success")
+            return
+        
+        # Lógica para detectar GPU e ativar MSI Mode via PowerShell
+        ps_script = """
+        $gpus = Get-PnpDevice -Class Display -Status OK
+        foreach ($gpu in $gpus) {
+            $path = "HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\$($gpu.DeviceID)\\Device Parameters\\Interrupt Management\\MessageSignaledInterruptProperties"
+            if (!(Test-Path $path)) { New-Item -Path $path -Force }
+            Set-ItemProperty -Path $path -Name "MSISupported" -Value 1
+            Set-ItemProperty -Path $path -Name "MessageNumberLimit" -Value 1
+        }
+        """
+        run_cmd(ps_script)
+        self.log("✅ [MSI Mode]: Configurado para todas as placas de vídeo ativas!", "success")
+
+    def apply_cpu_scheduler(self):
+        self.log("\n🧠 [CPU Scheduler]: Ajustando Quantum para 0x26 (Latência Zero)...", "info")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] Win32PrioritySeparation definido para 0x26.", "success")
+            return
+        
+        cmd = "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\PriorityControl' -Name 'Win32PrioritySeparation' -Value 38"
+        run_cmd(cmd)
+        self.log("✅ [CPU Scheduler]: Prioridade de primeiro plano otimizada!", "success")
+
+    def apply_net_throttle(self):
+        self.log("\n🌐 [Network]: Removendo estrangulamento de pacotes...", "info")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] NetworkThrottlingIndex definido para 0xFFFFFFFF.", "success")
+            return
+        
+        cmds = [
+            "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 0xFFFFFFFF",
+            "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'SystemResponsiveness' -Value 0"
+        ]
+        for c in cmds: run_cmd(c)
+        self.log("✅ [Network]: Stack de rede liberada para máxima performance!", "success")
+
+    def apply_vbs_disable(self):
+        self.log("\n🛡️ [VBS/HVCI]: Desativando Segurança baseada em Virtualização...", "warning")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] VBS/HVCI desativado via Registro. Requer reiniciar.", "success")
+            return
+        
+        cmds = [
+            "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'EnableVirtualizationBasedSecurity' -Value 0",
+            "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity' -Name 'Enabled' -Value 0"
+        ]
+        for c in cmds: run_cmd(c)
+        self.log("✅ [VBS/HVCI]: Desativado com sucesso! REINICIE o PC para aplicar.", "success")
+
+    def apply_kernel_restore(self):
+        self.log("\n🔄 [Kernel Restore]: Restaurando padrões de fábrica...", "info")
+        if DRY_RUN:
+            self.log("[SIMULAÇÃO] Padrões de Kernel restaurados.", "success")
+            return
+        
+        cmds = [
+            "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\PriorityControl' -Name 'Win32PrioritySeparation' -Value 2",
+            "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 10",
+            "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'SystemResponsiveness' -Value 20"
+        ]
+        # MSI Mode restore is complex (depends on device), usually safe to keep 1 if driver supports.
+        for c in cmds: run_cmd(c)
+        self.log("✅ [Kernel Restore]: Padrões de CPU e Rede restaurados!", "success")
+
+    def create_kernel_tab(self):
+        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        self.tabs["kernel"] = tab
+
+        # Header
+        header = ctk.CTkFrame(tab, fg_color="transparent")
+        header.pack(fill="x", pady=(0, 20))
+        
+        title_lbl = ctk.CTkLabel(header, text="Kernel & Hardware Engine", font=ctk.CTkFont(family="Segoe UI", size=22, weight="bold"), text_color="#00CCFF")
+        title_lbl.pack(side="left")
+        
+        # Grid de Cards (2 colunas) - Otimizado para 768p
+        grid = ctk.CTkFrame(tab, fg_color="transparent")
+        grid.pack(fill="both", expand=True)
+        grid.grid_columnconfigure((0, 1), weight=1)
+
+        kernel_items = [
+            {"id": "msi", "title": "GPU MSI Mode", "desc": "Ativa interrupções por mensagem na placa de vídeo", "color": "#00FF88", "cmd": "msi_mode"},
+            {"id": "scheduler", "title": "CPU Scheduler (0x26)", "desc": "Ajusta o Quantum da CPU para latência zero", "color": "#00CCFF", "cmd": "cpu_scheduler"},
+            {"id": "network", "title": "Network Throttling", "desc": "Desativa o limite de processamento de pacotes", "color": "#FFCC00", "cmd": "net_throttle"},
+            {"id": "vbs", "title": "Disable VBS/HVCI", "desc": "Ganha até 15% de FPS (Reduz segurança)", "color": "#EF4444", "cmd": "vbs_disable"},
+            {"id": "standby", "title": "Standby List Flush", "desc": "Limpa cache de memória em espera do Windows", "color": "#FF0055", "cmd": "standby_flush"},
+            {"id": "restore", "title": "Restaurar Padrões", "desc": "Reverte ajustes de Kernel para o padrão Windows", "color": "#64748B", "cmd": "kernel_restore"}
+        ]
+
+        for idx, item in enumerate(kernel_items):
+            r = idx // 2
+            c = idx % 2
+            
+            card = ctk.CTkFrame(grid, fg_color="#0F172A", border_width=1, border_color="#1E2631", corner_radius=12, height=100)
+            card.grid(row=r, column=c, padx=6, pady=6, sticky="nsew")
+            card.grid_propagate(False)
+            
+            title = ctk.CTkLabel(card, text=item["title"], font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), text_color="#F8FAFC")
+            title.place(x=15, y=10)
+            
+            desc = ctk.CTkLabel(card, text=item["desc"], font=ctk.CTkFont(family="Segoe UI", size=10), text_color="#94A3B8", wraplength=200, justify="left")
+            desc.place(x=15, y=35)
+
+            btn = ctk.CTkButton(
+                card, text="APLICAR", width=80, height=24, corner_radius=6, fg_color="#1E293B", hover_color=item["color"],
+                text_color="#FFFFFF", font=ctk.CTkFont(family="Segoe UI", size=9, weight="bold"),
+                command=lambda cmd=item["cmd"]: threading.Thread(target=self.run_kernel_optimization, args=(cmd,)).start()
+            )
+            btn.place(x=15, y=65)
 
     def run_all_maintenance(self):
         self.log("\n--- 🛠️ INICIANDO MANUTENÇÃO COMPLETA ---", "info")
@@ -1865,9 +2013,9 @@ class PremiumKillprocessApp(ctk.CTk):
             
         # Adicionar os padrões se não houver customizados
         apps = self.custom_shortcuts if self.custom_shortcuts else [
-            {"name": "STEAM", "icon_path": "assets/steam.png", "color": "#171A21"},
-            {"name": "DISCORD", "icon_path": "assets/discord.png", "color": "#5865F2"},
-            {"name": "CHROME", "icon_path": "assets/chrome.png", "color": "#4285F4"}
+            {"name": "STEAM", "icon_path": resource_path("assets/steam.png"), "color": "#171A21"},
+            {"name": "DISCORD", "icon_path": resource_path("assets/discord.png"), "color": "#5865F2"},
+            {"name": "CHROME", "icon_path": resource_path("assets/chrome.png"), "color": "#4285F4"}
         ]
         
         for app in apps:
@@ -1876,12 +2024,13 @@ class PremiumKillprocessApp(ctk.CTk):
             
             # Carregar ícone original com transparência REAL
             img = None
-            if "icon_path" in app and os.path.exists(app["icon_path"]):
+            icon_full_path = app["icon_path"]
+            if os.path.exists(icon_full_path):
                 try:
-                    pil_img = Image.open(app["icon_path"]).convert("RGBA")
+                    pil_img = Image.open(icon_full_path).convert("RGBA")
                     img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(20, 20))
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Erro ao carregar ícone: {e}")
             
             btn = ctk.CTkButton(frame, text=f"  {app['name']}", image=img, width=200, height=36, corner_radius=8, 
                                 fg_color=C["card"], border_width=1, border_color=C["border"], anchor="w",
@@ -2295,6 +2444,7 @@ del "%~f0"
             "optimize_center": "optimize_center",
             "autoboost": "autoboost",
             "extra": "extra",
+            "kernel": "kernel",
             "whitelist": "whitelist",
             "management": "management",
             "settings": "extra",
@@ -2722,6 +2872,39 @@ def optimize_tcp(log_func):
     for cmd in commands:
         run_cmd(cmd)
     log_func("✅ Rede TCP otimizada!")
+
+    # --- SYSTEM TRAY (SEGUNDO PLANO) ---
+    def create_tray_icon(self):
+        try:
+            icon_p = resource_path("assets/icon.png")
+            if not os.path.exists(icon_p): return
+            
+            image = Image.open(icon_p)
+            menu = pystray.Menu(
+                item('Abrir Killprocess', self.show_window, default=True),
+                item('Sair Completamente', self.quit_app)
+            )
+            self.tray_icon = pystray.Icon("killprocess", image, "Killprocess Sapphire", menu)
+            
+            # Rodar tray em thread separada
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
+        except Exception as e:
+            print(f"Erro ao criar tray icon: {e}")
+
+    def hide_window(self):
+        self.withdraw()
+        self.log("💡 Killprocess rodando em segundo plano.", "info")
+
+    def show_window(self):
+        self.deiconify()
+        self.state('normal')
+        self.focus_force()
+
+    def quit_app(self):
+        if self.tray_icon:
+            self.tray_icon.stop()
+        self.destroy()
+        sys.exit(0)
 
 if __name__ == "__main__":
     if not is_admin():

@@ -1,0 +1,6 @@
+customtkinter
+psutil
+requests
+Pillow
+pystray
+pyinstaller

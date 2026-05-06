@@ -38,5 +38,18 @@ O nível supremo de otimização barebone.
 
 ---
 
-## ⚠️ Plano de Contingência e Segurança
-O programa sempre cria um **Ponto de Restauração** do Windows e salva o backup dos serviços que estavam ativos em `active_services_backup.txt`. Um único clique no botão de Restauração reativa os padrões do Windows.
+## 🛠️ Desenvolvimento e Build
+
+Para gerar uma nova versão do executável (`.exe`) de forma automatizada, utilize o script de build incluído:
+
+1.  Certifique-se de ter o Python instalado.
+2.  Instale as dependências (se necessário): `pip install -r requirements.txt`
+3.  Execute o script de build:
+    ```bash
+    python build.py
+    ```
+4.  O executável final será gerado na pasta `dist/` com o nome **Killprocess_Sapphire.exe**.
+
+> [!IMPORTANT]
+> O executável gerado solicitará automaticamente privilégios de Administrador ao ser iniciado, garantindo que todas as otimizações de Kernel e Registro funcionem corretamente.
+
