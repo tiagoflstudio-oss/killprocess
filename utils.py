@@ -2,9 +2,9 @@ import os
 import sys
 import subprocess
 
-VERSION = "2.1.33" # Versão Atual (Sapphire Edition)
+VERSION = "2.1.34" # Versão Atual (Sapphire Edition)
 DRY_RUN = False # Modo Real para Release
-UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json"
+UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/Flux_OS/main/version.json"
 
 def resource_path(relative_path):
     """ Retorna o caminho absoluto para recursos, funcionando em Dev e no PyInstaller exe. """

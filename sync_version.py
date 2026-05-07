@@ -27,7 +27,7 @@ def sync():
     
     # URL da release (Padronizada para o GitHub)
     # Nota: Vamos configurar o workflow para criar uma release com o nome 'latest' ou tag da versão
-    data["url"] = f"https://github.com/tiagoflstudio-oss/killprocess/releases/latest/download/Flux_OS_Sapphire.exe"
+    data["url"] = f"https://github.com/tiagoflstudio-oss/Flux_OS/releases/latest/download/Flux_OS_Sapphire.exe"
     
     with open("version.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)

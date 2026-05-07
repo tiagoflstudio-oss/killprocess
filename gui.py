@@ -1054,10 +1054,14 @@ class PremiumKillprocessApp(ctk.CTk):
                 # Mostrar barra de progresso no UI
                 self.after(0, lambda: self.show_download_ui(True))
                 
-                with urllib.request.urlopen(req, timeout=30) as response:
+                try:
+                    response = urllib.request.urlopen(req, timeout=45)
                     total_size = int(response.info().get('Content-Length', 0))
+                    
+                    self.log(f"🚀 [Update System]: SERVIDOR RESPONDEU. TAMANHO: {total_size // 1024 if total_size > 0 else '???'} KB", "info")
+                    
                     downloaded = 0
-                    block_size = 8192
+                    block_size = 16384 # Buffer maior para velocidade
                     
                     with open(temp_exe, "wb") as f:
                         while True:
@@ -1071,12 +1075,17 @@ class PremiumKillprocessApp(ctk.CTk):
                             if total_size > 0:
                                 percent = downloaded / total_size
                                 self.after(0, lambda p=percent: self.update_download_progress(p))
-                            else:
-                                # Se não tiver tamanho total, simular pulsação ou logar bytes
-                                if downloaded % (1024 * 1024) == 0:
-                                    self.log(f"🚀 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
+                            
+                            if downloaded % (1024 * 512) == 0: # Log a cada 512KB
+                                self.log(f"📦 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
+                    
+                    response.close()
+                except Exception as e:
+                    self.log(f"❌ [Update System]: ERRO DURANTE O DOWNLOAD: {e}", "error")
+                    self.after(0, lambda: self.show_download_ui(False))
+                    return
 
-                self.log("🚀 [Update System]: DOWNLOAD CONCLUÍDO. PREPARANDO SUBSTITUIÇÃO...", "success")
+                self.log("✅ [Update System]: DOWNLOAD CONCLUÍDO. PREPARANDO SUBSTITUIÇÃO...", "success")
                 self.after(0, lambda: self.show_download_ui(False))
 
                 # 2. Criar o script de substituição (Batch)
