@@ -389,7 +389,7 @@ class PremiumKillprocessApp(ctk.CTk):
                                      command=lambda v, l=label: self.handle_top_menu(l, v),
                                      width=100, height=28, corner_radius=6,
                                      font=ctk.CTkFont("Segoe UI", 10, "bold"),
-                                     fg_color="transparent", button_color="transparent",
+                                     fg_color=C["panel"], button_color=C["panel"],
                                      button_hover_color=C["hover"], text_color="#E2E8F0")
             menu.set(label)
             menu.pack(side="left", padx=2)
