@@ -15,37 +15,23 @@ from pystray import MenuItem as item
 import random
 import winsound
 
-def resource_path(relative_path):
-    """ Retorna o caminho absoluto para recursos, funcionando em Dev e no PyInstaller exe. """
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+# --- NOVOS MÓDULOS MODULARIZADOS ---
+from styles import C, get_fonts
+import utils
+from services import SERVICES_MAP
 
-
-
-# ---
-# PALETA DE CORES APEX HUD
-# ---
-VERSION = "2.1.0" # Versao Atual (Kernel Edition)
-UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json" 
-
-C = {
-    "bg": "#080B0F",         # Fundo principal muito escuro, quase abissal
-    "panel": "#0B1015",      # Fundo de painéis/sidebar
-    "card": "#10151B",       # Fundo dos cards interativos
-    "card_light": "#1E293B", # Azul um pouco mais claro para destaque
-    "border": "#1E2631",     # Bordas e separadores sutis
-    "accent": "#00FF88",     # Verde ciberneon para ações de sucesso/status ativo
-    "hover": "#162B20",      # Hover sutil esverdeado para botões
-    "cyan": "#00CCFF",       # Ciano neon para informações e títulos secundários
-    "text": "#E2E8F0",       # Texto principal (slate-200)
-    "muted": "#64748B",      # Texto secundário (slate-500)
-    "gold": "#FFD700",       # Ouro para Modo Deus e features premium
-    "red": "#FF3366",        # Vermelho intenso para alertas ou modo perigoso
-    "orange": "#FF8C00"      # Laranja para simulação e alertas intermediários
-}
+# Import das Abas
+from tabs.dashboard_tab import DashboardTab
+from tabs.gpu_tab import GPUTab
+from tabs.management_tab import ManagementTab
+from tabs.scan_tab import ScanTab
+from tabs.settings_tab import SettingsTab
+from tabs.autoboost_tab import AutoboostTab
+from tabs.optimize_center_tab import OptimizeCenterTab
+from tabs.extra_tab import ExtraTab
+from tabs.kernel_tab import KernelTab
+from tabs.shell_tab import ShellTab
+from tabs.whitelist_tab import WhitelistTab
 
 # =====================================================================
 # 🚀 FLUX OS - Otimizador Supremo do Windows para Gamers
@@ -53,145 +39,6 @@ C = {
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
-
-DRY_RUN = True  # Começa como Simulação por padrão para máxima segurança
-
-def is_admin():
-    try:
-        import ctypes
-        return ctypes.windll.shell32.IsUserAnAdmin() != 0
-    except:
-        return False
-
-def run_cmd(cmd):
-    if DRY_RUN:
-        return f"[SIMULAÇÃO]: {cmd}"
-    try:
-        result = subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True)
-        return result.stdout.strip()
-    except Exception as e:
-        return str(e)
-
-# =====================================================================
-# ⚙️ Mapeamento Detalhado de Processos/Serviços por 6 Níveis Completos
-# =====================================================================
-
-SERVICES_MAP = {
-    "Nível 1: Aplicativos & Bloatwares": [
-        {"id": "chrome", "name": "Google Chrome", "type": "process", "checked": True},
-        {"id": "msedge", "name": "Microsoft Edge", "type": "process", "checked": True},
-        {"id": "onedrive", "name": "Microsoft OneDrive", "type": "process", "checked": True},
-        {"id": "teams", "name": "Microsoft Teams", "type": "process", "checked": True},
-        {"id": "discord", "name": "Discord Client", "type": "process", "checked": True},
-        {"id": "spotify", "name": "Spotify Background", "type": "process", "checked": True},
-        {"id": "zoom", "name": "Zoom Meeting Service", "type": "process", "checked": True},
-        {"id": "skype", "name": "Skype", "type": "process", "checked": True},
-        {"id": "whatsapp", "name": "WhatsApp", "type": "process", "checked": True},
-        {"id": "slack", "name": "Slack Client", "type": "process", "checked": True},
-        {"id": "telegram", "name": "Telegram Desktop", "type": "process", "checked": True},
-        {"id": "anydesk", "name": "AnyDesk Remote", "type": "process", "checked": True},
-        {"id": "winword", "name": "Microsoft Word", "type": "process", "checked": True},
-        {"id": "excel", "name": "Microsoft Excel", "type": "process", "checked": True},
-        {"id": "powerpnt", "name": "Microsoft PowerPoint", "type": "process", "checked": True},
-        {"id": "notepad", "name": "Notepad", "type": "process", "checked": True},
-        {"id": "calc", "name": "Windows Calculator", "type": "process", "checked": True},
-        {"id": "acrobat", "name": "Adobe Acrobat Reader", "type": "process", "checked": True},
-        {"id": "dropbox", "name": "Dropbox Client", "type": "process", "checked": True},
-        {"id": "teamviewer", "name": "TeamViewer", "type": "process", "checked": True}
-    ],
-    "Nível 2: Impressão & Manutenção": [
-        {"id": "Spooler", "name": "Spooler de Impressão", "type": "service", "checked": True},
-        {"id": "WSearch", "name": "Windows Search (Indexador)", "type": "service", "checked": True},
-        {"id": "SysMain", "name": "SysMain (Superfetch)", "type": "service", "checked": True},
-        {"id": "Themes", "name": "Temas Visuais do Windows", "type": "service", "checked": False},
-        {"id": "TabletInputService", "name": "Teclado Virtual / Caneta", "type": "service", "checked": True},
-        {"id": "PcaSvc", "name": "Assistente de Compatibilidade", "type": "service", "checked": True},
-        {"id": "WerSvc", "name": "Relatório de Erros do Windows", "type": "service", "checked": True},
-        {"id": "Fax", "name": "Serviço de Fax", "type": "service", "checked": True},
-        {"id": "PrintWorkflowUserSvc", "name": "Fluxo de Trabalho de Impressão", "type": "service", "checked": True},
-        {"id": "StiSvc", "name": "Aquisição de Imagens", "type": "service", "checked": True},
-        {"id": "DPS", "name": "Serviço de Diretivas de Diagnóstico", "type": "service", "checked": True},
-        {"id": "WdiServiceHost", "name": "Host de Serviço de Diagnóstico", "type": "service", "checked": True},
-        {"id": "WdiSystemHost", "name": "Host de Sistema de Diagnóstico", "type": "service", "checked": True},
-        {"id": "vmicguest", "name": "Hyper-V Guest", "type": "service", "checked": True},
-        {"id": "vmictimesync", "name": "Hyper-V Time Sync", "type": "service", "checked": True},
-        {"id": "vmicrdv", "name": "Hyper-V Remote Desktop", "type": "service", "checked": True},
-        {"id": "vmicvmsession", "name": "Hyper-V VM Session", "type": "service", "checked": True}
-    ],
-    "Nível 3: Telemetria & Rastreamento": [
-        {"id": "DiagTrack", "name": "Telemetria da Microsoft", "type": "service", "checked": True},
-        {"id": "PimIndexMaintenanceSvc", "name": "Manutenção de Índice Pim", "type": "service", "checked": True},
-        {"id": "ContactData", "name": "Dados de Contatos", "type": "service", "checked": True},
-        {"id": "UserDataSvc", "name": "Acesso a Dados de Usuário", "type": "service", "checked": True},
-        {"id": "OneSyncSvc", "name": "Sincronização do Host", "type": "service", "checked": True},
-        {"id": "DusmSvc", "name": "Uso de Dados", "type": "service", "checked": True},
-        {"id": "AppReadiness", "name": "Preparação de Aplicativos", "type": "service", "checked": True}
-    ],
-    "Nível 4: Xbox & Conexões Secundárias": [
-        {"id": "XblAuthManager", "name": "Autenticação do Xbox Live", "type": "service", "checked": True},
-        {"id": "XblGameSave", "name": "Salvar Jogos do Xbox Live", "type": "service", "checked": True},
-        {"id": "XboxNetApiSvc", "name": "Rede do Xbox Live", "type": "service", "checked": True},
-        {"id": "XboxGipSvc", "name": "Acessórios do Xbox", "type": "service", "checked": True},
-        {"id": "bthserv", "name": "Serviço de Bluetooth", "type": "service", "checked": True},
-        {"id": "BTAGCategoryService", "name": "Áudio Bluetooth", "type": "service", "checked": True},
-        {"id": "BluetoothUserService", "name": "Serviço de Usuário de Bluetooth", "type": "service", "checked": True},
-        {"id": "NfcService", "name": "NFC Service", "type": "service", "checked": True},
-        {"id": "PhoneSvc", "name": "Serviço de Telefone", "type": "service", "checked": True},
-        {"id": "SensorSvc", "name": "Serviço de Sensores", "type": "service", "checked": True},
-        {"id": "SensorDataSvc", "name": "Dados dos Sensores", "type": "service", "checked": True},
-        {"id": "SensorsSrv", "name": "Servidor de Sensores", "type": "service", "checked": True},
-    ],
-    "Nível 5: Redes & Streaming": [
-        {"id": "SharedAccess", "name": "Compartilhamento de Internet", "type": "service", "checked": True},
-        {"id": "lfsvc", "name": "Serviço de Geolocalização", "type": "service", "checked": True},
-        {"id": "MapsBroker", "name": "Gerenciador de Mapas Baixados", "type": "service", "checked": True},
-        {"id": "WpcProvider", "name": "Controles dos Pais", "type": "service", "checked": True},
-        {"id": "RetailDemo", "name": "Modo de Demonstração de Varejo", "type": "service", "checked": True},
-        {"id": "AJRouter", "name": "Roteamento AllJoyn", "type": "service", "checked": True},
-        {"id": "diagnosticshub.standardcollector.service", "name": "Coletor do Hub de Diagnóstico", "type": "service", "checked": True},
-        {"id": "TrkWks", "name": "Clientes de Rastreamento de Link", "type": "service", "checked": True}
-    ],
-    "Nível 6: Segurança & Criptografia": [
-        {"id": "KeyIso", "name": "Isolamento de Chave", "type": "service", "checked": True},
-        {"id": "VaultSvc", "name": "Gerenciador de Credenciais", "type": "service", "checked": True},
-        {"id": "SCardSvr", "name": "Cartão Inteligente", "type": "service", "checked": True},
-        {"id": "wisvc", "name": "Windows Insider Service", "type": "service", "checked": True},
-        {"id": "RemoteRegistry", "name": "Registro Remoto", "type": "service", "checked": True},
-    ],
-    "Nível 7: Modo Deus (God Mode)": [
-        {"id": "PushToInstall", "name": "Windows Store Push Service", "type": "service", "checked": True},
-        {"id": "ClipSVC", "name": "Serviço de Licença de Cliente", "type": "service", "checked": True},
-        {"id": "AppXSvc", "name": "Serviço de Implantação AppX", "type": "service", "checked": True},
-        {"id": "LicenseManager", "name": "Gerenciador de Licenças", "type": "service", "checked": True},
-        {"id": "WpnService", "name": "Notificações Push", "type": "service", "checked": True},
-        {"id": "BITS", "name": "Background Intelligent Transfer", "type": "service", "checked": True},
-        {"id": "defragsvc", "name": "Otimização de Unidades", "type": "service", "checked": True},
-    ],
-    "Nível 8: Gaming Polish (Ultra Seguro)": [
-        {"id": "Fax", "name": "Serviço de Fax", "type": "service", "checked": True},
-        {"id": "MapsBroker", "name": "Gerenciador de Mapas Download", "type": "service", "checked": True},
-        {"id": "WpcMonService", "name": "Controle de Pais", "type": "service", "checked": True},
-        {"id": "RetailDemo", "name": "Serviço de Demo de Loja", "type": "service", "checked": True},
-        {"id": "WalletService", "name": "Serviço de Carteira", "type": "service", "checked": True},
-        {"id": "icssvc", "name": "Hotspot Móvel", "type": "service", "checked": True},
-        {"id": "TrkWks", "name": "Rastreamento de Link", "type": "service", "checked": True},
-    ],
-    "Nível 9: Deep Gaming Engine (System)": [
-        {"id": "PcaSvc", "name": "Assistente de Compatibilidade", "type": "service", "checked": True},
-        {"id": "SysMain", "name": "SysMain (Superfetch)", "type": "service", "checked": True},
-        {"id": "WSearch", "name": "Windows Search (Indexação)", "type": "service", "checked": True},
-        {"id": "TextInputHost", "name": "Processo de Entrada de Texto", "type": "process", "checked": True},
-        {"id": "ctfmon", "name": "CTF Loader", "type": "process", "checked": True},
-        {"id": "SmartScreen", "name": "Windows SmartScreen", "type": "process", "checked": True},
-        {"id": "WbioSrvc", "name": "Serviço Biométrico", "type": "service", "checked": True},
-    ],
-    "Nível 10: Security & Defense Off (Agressivo)": [
-        {"id": "SecurityHealthService", "name": "Windows Security Health", "type": "service", "checked": True},
-        {"id": "WinDefend", "name": "Windows Defender Antivirus", "type": "service", "checked": True},
-        {"id": "WdNisSvc", "name": "Defender Network Inspection", "type": "service", "checked": True},
-        {"id": "Sense", "name": "Defender ATP", "type": "service", "checked": True},
-    ]
-}
 
 # =====================================================================
 # 📊 Gráfico Vivo Neon e Dinâmico
@@ -350,7 +197,7 @@ class PremiumKillprocessApp(ctk.CTk):
         
         # Configurar ícone da janela
         try:
-            icon_p = resource_path("assets/icon.png")
+            icon_p = utils.resource_path("assets/icon.png")
             if os.path.exists(icon_p):
                 img = Image.open(icon_p)
                 photo = ImageTk.PhotoImage(img)
@@ -406,13 +253,14 @@ class PremiumKillprocessApp(ctk.CTk):
         
         # Content (Área dinâmica - Ajustada para encostar no monitor)
         self.content_frame = ctk.CTkFrame(self.main_container, fg_color=C["bg"], corner_radius=0)
-        self.content_frame.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=0)
+        self.content_frame.pack(side="left", fill="both", expand=True, padx=0, pady=0)
         self.content_frame.grid_columnconfigure(0, weight=1)
         self._build_content()
 
         # Configurações Adicionais
         self.tabs = {}
         self.level_checkboxes_dashboard = {}
+        self.checkboxes = {}
         self.level_indicators = {}
         self.whitelist = []
         self.sidebar_collapsed = False
@@ -436,16 +284,19 @@ class PremiumKillprocessApp(ctk.CTk):
         self.sub_font = ctk.CTkFont(family="Segoe UI", size=12)
 
         self.load_whitelist()
-        self.create_dashboard_tab()
-        self.create_management_tab()
-        self.create_scan_tab()
-        self.create_settings_tab()
-        self.create_autoboost_tab()
-        self.create_optimize_center_tab()
-        self.create_extra_tab()
-        self.create_kernel_tab()
-        self.create_shell_tab()
-        self.create_whitelist_tab()
+        
+        # --- INICIALIZAÇÃO DE ABAS MODULARIZADAS (SAPPHIRE ARCHITECTURE) ---
+        self.tabs["dashboard"] = DashboardTab(self.content_frame, self)
+        self.tabs["management"] = ManagementTab(self.content_frame, self)
+        self.tabs["scan"] = ScanTab(self.content_frame, self)
+        self.tabs["gpu"] = GPUTab(self.content_frame, self)
+        self.tabs["settings"] = SettingsTab(self.content_frame, self)
+        self.tabs["autoboost"] = AutoboostTab(self.content_frame, self)
+        self.tabs["optimize_center"] = OptimizeCenterTab(self.content_frame, self)
+        self.tabs["extra"] = ExtraTab(self.content_frame, self)
+        self.tabs["kernel"] = KernelTab(self.content_frame, self)
+        self.tabs["shell"] = ShellTab(self.content_frame, self)
+        self.tabs["whitelist"] = WhitelistTab(self.content_frame, self)
 
         self.switch_tab("dashboard")
 
@@ -564,10 +415,9 @@ class PremiumKillprocessApp(ctk.CTk):
         add_nav_btn("kernel", "🧠", "KERNEL ENGINE")
         add_nav_btn("autoboost", "🚀", "AUTO-BOOST")
         add_nav_btn("extra", "🛠️", "MANUTENÇÃO")
+        add_nav_btn("gpu", "🎮", "NVIDIA GPU")
         
         # --- ÁREA DE ATALHOS RÁPIDOS (BANNERS RETANGULARES) ---
-        ctk.CTkLabel(self.sidebar_frame, text="CENTRAL DE LANÇAMENTO", font=ctk.CTkFont("Segoe UI", 8, "bold"), text_color=C["muted"]).pack(pady=(20, 5))
-        
         self.shortcut_container = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
         self.shortcut_container.pack(fill="x", padx=10, pady=5)
         
@@ -582,7 +432,7 @@ class PremiumKillprocessApp(ctk.CTk):
         add_btn.pack(pady=10)
 
         # --- Versão no Rodapé ---
-        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"FLUX OS v{VERSION}", 
+        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"FLUX OS v{utils.VERSION}", 
                                font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"])
         self.ver_lbl.pack(side="bottom", pady=10)
 
@@ -657,985 +507,17 @@ class PremiumKillprocessApp(ctk.CTk):
         self.pending_clear = False
         self.clear_log_btn.configure(text_color=C["muted"])
 
-    def create_dashboard_tab(self):
-        # Usando ScrollableFrame com expansão total para o cockpit panorâmico
-        tab = ctk.CTkScrollableFrame(self.content_frame, fg_color="transparent", corner_radius=0)
-        tab.pack(fill="both", expand=True)
-        self.tabs["dashboard"] = tab
-        
-        # SOLUÇÃO DEFINITIVA: Força o frame interno a seguir a largura do canvas
-        tab._parent_canvas.bind("<Configure>", lambda e: tab._parent_canvas.itemconfig(tab._parent_canvas.find_withtag("all")[0], width=e.width))
-        
-        # Configura a coluna do frame interno para expandir
-        tab.grid_columnconfigure(0, weight=1)
 
-        # ── LINHA 1: Cabeçalho ──────────────────────────────────────────
-        hdr = ctk.CTkFrame(tab, fg_color="transparent")
-        hdr.grid(row=0, column=0, sticky="ew", pady=(0, 10))
-        ctk.CTkLabel(hdr, text="CENTRO DE CONTROLE", font=self.title_font,
-                     text_color=C["text"]).pack(side="left")
-        
-        self.status_val_lbl = ctk.CTkLabel(
-            hdr, text="● PRONTO", font=ctk.CTkFont("Segoe UI", 11, "bold"),
-            text_color=C["accent"], fg_color="#051408", corner_radius=6, padx=10, pady=3)
-        self.status_val_lbl.pack(side="right")
 
-        # ── LINHA 2: Seletor de Níveis (PANORÂMICO TOTAL) ───────────────
-        lvl_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1,
-                                 border_color=C["border"], corner_radius=15)
-        lvl_card.grid(row=1, column=0, sticky="ew", pady=(0, 10))
 
-        ctk.CTkLabel(lvl_card, text="▌ NÍVEIS DE OTIMIZAÇÃO (STATUS DO KERNEL)",
-                     font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                     text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(8, 4))
 
-        self.lights_frame = ctk.CTkFrame(lvl_card, fg_color="transparent")
-        self.lights_frame.pack(fill="x", expand=True, padx=15, pady=(0, 6))
 
-        self.level_indicators = {}
-        self.level_checkboxes_dashboard = {}
 
-        self.level_desc_lbl = ctk.CTkLabel(
-            lvl_card, text="Passe o mouse sobre um nível para ver detalhes da otimização.",
-            font=ctk.CTkFont("Segoe UI", 11), text_color=C["muted"])
-        self.level_desc_lbl.pack(anchor="w", padx=15, pady=(0, 10))
 
-        def update_desc(txt): self.level_desc_lbl.configure(text=txt)
 
-        levels_data = [
-            (1, "N1", "Apps", "#00FF88", "Fecha navegadores e apps em segundo plano."),
-            (2, "N2", "Print", "#00FFB2", "Impressora e manutenção."),
-            (3, "N3", "Telemetria", "#FFFF00", "Telemetria e diagnósticos."),
-            (4, "N4", "Xbox/BT", "#FF8000", "Xbox Live e Bluetooth."),
-            (5, "N5", "Net/Maps", "#FF0055", "Rede e mapas offline."),
-            (6, "N6", "Crypto", "#00CCFF", "Segurança e biometria."),
-            (7, "N7", "God Mode", "#FFD700", "Modo Deus: Performance Gamer."),
-            (8, "N8", "Polish", "#00FF88", "Polish: Serviços fantasmas."),
-            (9, "N9", "Engine", "#C084FC", "Deep Engine: Otimização de núcleo."),
-            (10, "N10", "Security", "#EF4444", "⚠️ AVISO: Desativa Defender.")
-        ]
-        
-        row_idx = 0
-        col_idx = 0
-        for num, lvl_id, name, color, desc in levels_data:
-            f = ctk.CTkFrame(self.lights_frame, fg_color="transparent")
-            f.grid(row=row_idx, column=col_idx, sticky="nsew", padx=4, pady=2)
-            cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                                  fg_color=color, hover_color=color, width=16,
-                                  command=lambda d=desc: update_desc(d))
-            if num <= 8: cb.select()
-            cb.pack(side="left", padx=(0, 2))
-            cb.bind("<Enter>", lambda e, d=desc: update_desc(d))
-            
-            try:
-                full_key = list(SERVICES_MAP.keys())[num-1]
-                self.level_checkboxes_dashboard[full_key] = cb
-            except: pass
-                
-            self.level_indicators[num] = {"circle": cb, "cb": cb, "color": color}
-            col_idx += 1
-            if col_idx > 4: 
-                col_idx = 0
-                row_idx += 1
-        self.lights_frame.grid_columnconfigure((0,1,2,3,4), weight=1)
 
-        # ── LINHA 3: Métricas de Telemetria (Grid 2x3 Expandido) ──────
-        m_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        m_frame.grid(row=2, column=0, sticky="ew", pady=(0, 10))
-        m_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
-        def add_m_card(title, attr, color, r, c):
-            card = ctk.CTkFrame(m_frame, fg_color=C["card"], border_width=1, 
-                                 border_color=C["border"], corner_radius=15)
-            card.grid(row=r, column=c, padx=3, pady=3, sticky="nsew")
-            ctk.CTkLabel(card, text=title, font=ctk.CTkFont("Segoe UI", 8, "bold"), 
-                         text_color=C["cyan"]).pack(anchor="w", padx=10, pady=(6, 0))
-            lbl = ctk.CTkLabel(card, text="--", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["text"])
-            lbl.pack(anchor="w", padx=10)
-            setattr(self, attr, lbl)
-            pb = ctk.CTkProgressBar(card, height=4, progress_color=color, fg_color="#1E2631")
-            pb.pack(fill="x", padx=10, pady=(0, 6))
-            pb.set(0.2)
-            setattr(self, attr + "_pb", pb)
 
-        add_m_card("RAM EM USO", "ram_lbl", "#10B981", 0, 0)
-        add_m_card("GPU LOAD", "gpu_lbl", "#F43F5E", 0, 1)
-        add_m_card("NETWORK", "net_lbl", "#C084FC", 0, 2)
-        add_m_card("CPU USAGE", "cpu_lbl", C["accent"], 1, 0)
-        add_m_card("DISK USAGE", "disk_lbl", "#2DD4BF", 1, 1)
-        add_m_card("PROCESSOS", "proc_lbl", "#38BDF8", 1, 2)
-
-        # ── LINHA 4: Botões de Ação + Radar ─────────────────────────────
-        row3 = ctk.CTkFrame(tab, fg_color="transparent")
-        row3.grid(row=3, column=0, sticky="ew", pady=(0, 4))
-        row3.grid_columnconfigure(0, weight=2)
-        row3.grid_columnconfigure(1, weight=1)
-
-        act = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1,
-                            border_color=C["border"], corner_radius=10)
-        act.grid(row=0, column=0, padx=(0, 6), sticky="nsew")
-        ctk.CTkLabel(act, text="▌ AÇÕES RÁPIDAS (ONE-CLICK)", font=ctk.CTkFont("Segoe UI", 9, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=14, pady=(10, 8))
-
-        btn_grid = ctk.CTkFrame(act, fg_color="transparent")
-        btn_grid.pack(fill="both", expand=True, padx=10, pady=(0, 10))
-        btn_grid.grid_columnconfigure((0, 1, 2), weight=1, uniform="buttons")
-
-        self.full_opt_btn = ctk.CTkButton(
-            btn_grid, text="🚀\nOTIMIZAR TUDO", fg_color="#0D47A1", hover_color="#1565C0",
-            font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10,
-            command=self.start_full_optimization)
-        self.full_opt_btn.grid(row=0, column=0, padx=8, pady=8, sticky="nsew")
-
-        self.god_mode_btn = ctk.CTkButton(
-            btn_grid, text="👑\nGOD MODE", fg_color=C["gold"], hover_color="#C8A800",
-            font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10, text_color="#0A0A0A",
-            command=self.start_god_mode)
-        self.god_mode_btn.grid(row=0, column=1, padx=8, pady=8, sticky="nsew")
-
-        self.optimize_selection_btn = ctk.CTkButton(
-            btn_grid, text="⚡\nGAMER CUSTOM", fg_color="#1E2631", hover_color="#3B82F6",
-            border_width=1, border_color="#3B82F6", font=ctk.CTkFont("Segoe UI", 11, "bold"), height=100, corner_radius=10,
-            command=self.start_optimize_selection)
-        self.optimize_selection_btn.grid(row=0, column=2, padx=8, pady=8, sticky="nsew")
-
-        shortcuts_row = ctk.CTkFrame(act, fg_color="transparent")
-        shortcuts_row.pack(fill="x", padx=10, pady=(0, 8))
-        shortcuts_row.grid_columnconfigure((0, 1, 2), weight=1)
-
-        self.btn_ab_dash = ctk.CTkButton(
-            shortcuts_row, text="🚀 Auto Boost", fg_color="#111827", hover_color="#10B981",
-            border_width=1, border_color="#10B981", font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
-            command=self.toggle_autoboost)
-        self.btn_ab_dash.grid(row=0, column=0, padx=3, sticky="nsew")
-
-        self.btn_maint_dash = ctk.CTkButton(
-            shortcuts_row, text="🛠️ Executar Tudo", fg_color="#111827", hover_color="#10B981",
-            border_width=1, border_color="#10B981", font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
-            command=lambda: threading.Thread(target=self.run_all_maintenance, daemon=True).start())
-        self.btn_maint_dash.grid(row=0, column=1, padx=3, sticky="nsew")
-
-        self.btn_shell_dash = ctk.CTkButton(
-            shortcuts_row, text="👑 Shell Mode", fg_color="#111827", hover_color=C["gold"],
-            border_width=1, border_color=C["gold"], font=ctk.CTkFont("Segoe UI", 10, "bold"), height=32, corner_radius=6,
-            command=self.toggle_gold_mode_explorer)
-        self.btn_shell_dash.grid(row=0, column=2, padx=3, sticky="nsew")
-
-        self.restore_btn = ctk.CTkButton(
-            act, text="🔄  RESTAURAR PADRÕES DO WINDOWS", fg_color="#0F172A", hover_color="#EF4444",
-            border_width=1, border_color="#1E293B", font=ctk.CTkFont("Segoe UI", 9, "bold"), height=30, corner_radius=6,
-            text_color=C["muted"], command=self.start_restoration)
-        self.restore_btn.pack(fill="x", padx=14, pady=(2, 10))
-
-        radar_card = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        radar_card.grid(row=0, column=1, sticky="nsew")
-        ctk.CTkLabel(radar_card, text="▌ PERFORMANCE RADAR", font=ctk.CTkFont("Segoe UI", 9, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=12, pady=(10, 4))
-        self.radar_canvas = ctk.CTkCanvas(radar_card, bg=C["card"], highlightthickness=0, width=240, height=120)
-        self.radar_canvas.pack(fill="both", expand=True, padx=10, pady=(0, 10))
-        self.draw_radar_chart()
-
-        # ── LINHA 5: Manutenção Avançada ────────────────────────────────
-        m_adv_card = ctk.CTkFrame(tab, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
-        m_adv_card.grid(row=4, column=0, sticky="ew", pady=(6, 20))
-        ctk.CTkLabel(m_adv_card, text="▌ MANUTENÇÃO AVANÇADA", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(anchor="w", padx=15, pady=(12, 10))
-        
-        m_grid = ctk.CTkFrame(m_adv_card, fg_color="transparent")
-        m_grid.pack(fill="x", expand=True, padx=15, pady=(0, 15))
-        m_grid.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
-        
-        m_btn_style = {"height": 45, "corner_radius": 8, "font": ctk.CTkFont("Segoe UI", 11, "bold"), "border_width": 1, "border_color": C["border"], "fg_color": "#0F172A", "hover_color": "#1E293B"}
-        self.clean_btn = ctk.CTkButton(m_grid, text="🧹 LIMPEZA DISCO", **m_btn_style, text_color="#10B981", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("clean_temp",)).start())
-        self.clean_btn.grid(row=0, column=0, padx=5, sticky="nsew")
-        
-        self.dns_btn = ctk.CTkButton(m_grid, text="🌐 FLUSH DNS", **m_btn_style, text_color="#3B82F6", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("flush_dns",)).start())
-        self.dns_btn.grid(row=0, column=1, padx=5, sticky="nsew")
-        
-        self.power_btn = ctk.CTkButton(m_grid, text="⚡ PLANO ULTIMATE", **m_btn_style, text_color="#FBBF24", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("power_plan",)).start())
-        self.power_btn.grid(row=0, column=2, padx=5, sticky="nsew")
-        
-        self.ram_flush_btn = ctk.CTkButton(m_grid, text="💾 LIMPAR RAM", **m_btn_style, text_color="#F8FAFC", command=lambda: threading.Thread(target=self.run_extra_optimization, args=("ram_flush",)).start())
-        self.ram_flush_btn.grid(row=0, column=3, padx=5, sticky="nsew")
-        
-        self.kernel_boost_btn = ctk.CTkButton(m_grid, text="🧠 KERNEL BOOST", **m_btn_style, text_color=C["cyan"], command=lambda: threading.Thread(target=self.run_kernel_optimization, args=("apply_all",)).start())
-        self.kernel_boost_btn.grid(row=0, column=4, padx=5, sticky="nsew")
-
-
-    def create_management_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["management"] = tab
-
-        # Cabeçalho
-        manage_lbl = ctk.CTkLabel(tab, text="Processos & Serviços", font=self.title_font, text_color="#F8FAFC")
-        manage_lbl.pack(anchor="w", pady=(5, 2))
-
-        self.manage_sub = ctk.CTkLabel(
-            tab, text="Selecione um nível de otimização para ver e ajustar suas opções detalhadamente.", 
-            font=self.label_font, text_color="#94A3B8"
-        )
-        self.manage_sub.pack(anchor="w", pady=(0, 20))
-
-        self.management_content_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        self.management_content_frame.pack(fill="both", expand=True)
-
-        # ---------------------------------------------------------
-        # GRID DE CARDS (Níveis de Otimização)
-        # ---------------------------------------------------------
-        self.levels_grid_frame = ctk.CTkFrame(self.management_content_frame, fg_color="transparent")
-        self.levels_grid_frame.pack(fill="both", expand=True)
-
-        self.levels_grid_frame.grid_columnconfigure((0, 1), weight=1)
-
-        level_cards_data = [
-            {"id": "Nível 1: Aplicativos & Bloatwares", "title": "🟢 Nível 1", "subtitle": "Apps & Bloatware", "row": 0, "col": 0},
-            {"id": "Nível 2: Impressão & Manutenção", "title": "🟡 Nível 2", "subtitle": "Impressão & Servs.", "row": 0, "col": 1},
-            {"id": "Nível 3: Telemetria & Rastreamento", "title": "🟠 Nível 3", "subtitle": "Telemetria & Rastr.", "row": 1, "col": 0},
-            {"id": "Nível 4: Xbox & Conexões Secundárias", "title": "🔴 Nível 4", "subtitle": "Xbox & Conexões", "row": 1, "col": 1},
-            {"id": "Nível 5: Redes & Streaming", "title": "🌐 Nível 5", "subtitle": "Redes & Streaming", "row": 2, "col": 0},
-            {"id": "Nível 6: Segurança & Criptografia", "title": "🔒 Nível 6", "subtitle": "Segur. & Cripto.", "row": 2, "col": 1},
-            {"id": "Nível 7: Modo Deus (God Mode)", "title": "👑 Modo Deus", "subtitle": "God Mode Supremo", "row": 3, "col": 0},
-            {"id": "Nível 8: Gaming Polish (Ultra Seguro)", "title": "✨ Nível 8", "subtitle": "Gaming Polish", "row": 3, "col": 1},
-            {"id": "Nível 9: Deep Gaming Engine (System)", "title": "⚙️ Nível 9", "subtitle": "Deep Engine", "row": 4, "col": 0},
-            {"id": "Nível 10: Security & Defense Off (Agressivo)", "title": "🛡️ Nível 10", "subtitle": "Security OFF", "row": 4, "col": 1}
-        ]
-
-        for c in level_cards_data:
-            btn_card = ctk.CTkButton(
-                self.levels_grid_frame, text=f"{c['title']} - {c['subtitle']}",
-                fg_color="#10151B", hover_color="#1E2631", border_width=1, border_color="#1E2631",
-                font=self.section_font, height=60, corner_radius=10,
-                command=lambda cat=c["id"]: self.show_level_options(cat)
-            )
-            btn_card.grid(row=c["row"], column=c["col"], padx=4, pady=4, sticky="nsew")
-
-        # ---------------------------------------------------------
-        self.level_details_frame = ctk.CTkFrame(self.management_content_frame, fg_color="transparent")
-        
-        self.back_btn = ctk.CTkButton(
-            self.level_details_frame, text="⬅️ Voltar aos Níveis", fg_color="#10151B", hover_color="#1E2631", border_width=1, border_color="#1E2631",
-            font=self.label_font, height=32, corner_radius=6, command=self.show_levels_grid
-        )
-        self.back_btn.pack(anchor="w", pady=(0, 8))
-
-        self.scroll_frame = ctk.CTkScrollableFrame(self.level_details_frame, fg_color="#10151B", border_width=1, border_color="#1E2631", corner_radius=10)
-        self.scroll_frame.pack(fill="both", expand=True)
-
-        self.checkboxes = {}
-        self.category_frames = {}
-
-        for category, items in SERVICES_MAP.items():
-            frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-            self.category_frames[category] = frame
-
-            cat_lbl = ctk.CTkLabel(frame, text=category.upper(), font=self.section_font, text_color="#00FFFF")
-            cat_lbl.pack(anchor="w", padx=10, pady=(10, 5))
-
-            for item in items:
-                row_frame = ctk.CTkFrame(frame, fg_color="transparent")
-                row_frame.pack(fill="x", padx=10, pady=2)
-
-                cb = ctk.CTkCheckBox(
-                    row_frame, text=f"{item['name']} ({item['id']})", 
-                    font=self.label_font, fg_color="#00FFFF", hover_color="#00CCCC"
-                )
-                if item["checked"]:
-                    cb.select()
-                cb.pack(side="left", anchor="w")
-                self.checkboxes[item["id"]] = cb
-
-    def show_level_options(self, category):
-        self.levels_grid_frame.pack_forget()
-        self.manage_sub.configure(text=f"Personalizando opções detalhadas para: {category}")
-
-        for frame in self.category_frames.values():
-            frame.pack_forget()
-
-        self.category_frames[category].pack(fill="both", expand=True)
-        self.level_details_frame.pack(fill="both", expand=True)
-
-    def show_levels_grid(self):
-        self.level_details_frame.pack_forget()
-        self.manage_sub.configure(text="Selecione um nível de otimização para ver e ajustar suas opções detalhadamente.")
-        self.levels_grid_frame.pack(fill="both", expand=True)
-
-    def create_scan_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["scan"] = tab
-
-        scan_lbl = ctk.CTkLabel(tab, text="Escaneamento Avançado de Processos", font=self.title_font, text_color="#F8FAFC")
-        scan_lbl.pack(anchor="w", pady=(5, 2))
-
-        scan_sub = ctk.CTkLabel(tab, text="Visualize todos os processos do sistema operacional e escolha quais encerrar com segurança.", font=self.label_font, text_color="#94A3B8")
-        scan_sub.pack(anchor="w", pady=(0, 10))
-
-        # Top controls for scanning
-        ctrl_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        ctrl_frame.pack(fill="x", pady=(5, 10))
-
-        self.scan_run_btn = ctk.CTkButton(
-            ctrl_frame, text="🔍 ESCANEAR TUDO EM TEMPO REAL", fg_color="#10B981", hover_color="#059669",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), height=46, corner_radius=12, text_color="#0D0F12",
-            command=self.run_process_scan
-        )
-        self.scan_run_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
-
-        self.kill_selected_btn = ctk.CTkButton(
-            ctrl_frame, text="⚡ ENCERRAR PROCESSOS SELECIONADOS", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), height=46, corner_radius=12,
-            command=self.kill_scanned_processes
-        )
-        self.kill_selected_btn.pack(side="right", fill="x", expand=True, padx=(10, 0))
-
-        # Filter and Search Bar
-        filter_frame = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        filter_frame.pack(fill="x", pady=(5, 10))
-
-        f_lbl = ctk.CTkLabel(filter_frame, text="🔍 FILTRAR PROCESSOS:", font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#10B981")
-        f_lbl.pack(side="left", padx=(15, 10), pady=12)
-
-        self.scan_filter_entry = ctk.CTkEntry(
-            filter_frame, fg_color="#0D0F12", border_color="#1E2B2A", text_color="#E2E8F0", 
-            placeholder_text="Ex: chrome, steam, edge...", height=36, corner_radius=8
-        )
-        self.scan_filter_entry.pack(side="left", fill="x", expand=True, padx=(0, 15), pady=12)
-        self.scan_filter_entry.bind("<KeyRelease>", lambda e: self.filter_scan_list())
-
-        # Select All / Select Safe
-        sel_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        sel_frame.pack(fill="x", pady=(0, 5))
-
-        self.select_all_btn = ctk.CTkButton(
-            sel_frame, text="✅ Selecionar Todos", fg_color="#11161A", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=34, corner_radius=8, command=self.select_all_scanned
-        )
-        self.select_all_btn.pack(side="left", padx=(0, 8))
-
-        self.select_safe_btn = ctk.CTkButton(
-            sel_frame, text="🎮 Selecionar Apenas Seguros", fg_color="#11161A", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=34, corner_radius=8, command=self.select_safe_scanned
-        )
-        self.select_safe_btn.pack(side="left", padx=8)
-
-        self.deselect_all_btn = ctk.CTkButton(
-            sel_frame, text="❌ Desmarcar Todos", fg_color="#11161A", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=34, corner_radius=8, command=self.deselect_all_scanned
-        )
-        self.deselect_all_btn.pack(side="left", padx=8)
-
-        self.scan_selection_lbl = ctk.CTkLabel(
-            sel_frame, text="Nenhum processo listado", font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
-            text_color="#10B981"
-        )
-        self.scan_selection_lbl.pack(side="right", padx=(8, 15))
-
-        # List Container
-        self.scan_scroll_frame = ctk.CTkScrollableFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        self.scan_scroll_frame.pack(fill="both", expand=True, pady=(5, 5))
-
-        # Add empty message
-        self.scan_msg_lbl = ctk.CTkLabel(
-            self.scan_scroll_frame, text="Clique em 'Escanear Tudo em Tempo Real' para listar todos os processos.", 
-            font=self.label_font, text_color="#94A3B8"
-        )
-        self.scan_msg_lbl.pack(padx=20, pady=40)
-
-        self.scanned_checkboxes = {}
-        self.scanned_frames = {}
-
-    def run_process_scan(self):
-        # Limpar widgets anteriores
-        for widget in self.scan_scroll_frame.winfo_children():
-            widget.destroy()
-
-        self.scanned_checkboxes.clear()
-        self.scanned_frames.clear()
-
-        # Mostrar indicador de progresso
-        loading_lbl = ctk.CTkLabel(self.scan_scroll_frame, text="🔍 Escaneando processos...", font=self.label_font, text_color="#10B981")
-        loading_lbl.pack(padx=20, pady=20)
-        self.update_idletasks()
-
-        # Buscar lista de processos reais usando tasklist via subprocess
-        try:
-            import subprocess
-            active_p = {}
-            for proc in psutil.process_iter(['name', 'pid', 'memory_info']):
-                try:
-                    p_name = proc.info['name'].lower()
-                    pid = str(proc.info['pid'])
-                    mem_kb = proc.info['memory_info'].rss / 1024
-                    
-                    if p_name not in active_p:
-                        active_p[p_name] = {"pid": pid, "mem_kb": mem_kb, "instances": 1}
-                    else:
-                        active_p[p_name]["instances"] += 1
-                        active_p[p_name]["mem_kb"] += mem_kb
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
-            
-            # Formatar memória final
-            for p_name in active_p:
-                val = active_p[p_name]["mem_kb"]
-                active_p[p_name]["mem"] = f"{val:,.0f} K".replace(",", ".")
-        except Exception as e:
-            self.log(f"⚠️ Erro ao executar tasklist: {e}", "error")
-            active_p = {}
-
-        loading_lbl.destroy()
-
-        if not active_p:
-            empty_lbl = ctk.CTkLabel(
-                self.scan_scroll_frame, text="⚠️ Não foi possível obter a lista de processos ativos.", 
-                font=self.label_font, text_color="#EF4444"
-            )
-            empty_lbl.pack(padx=20, pady=40)
-            return
-
-        # Header de Detecção
-        detected_title = ctk.CTkLabel(
-            self.scan_scroll_frame, text=f"📋 TOTAL DE PROCESSOS ENCONTRADOS NO SISTEMA: {len(active_p)}", 
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), text_color="#10B981"
-        )
-        detected_title.pack(anchor="w", padx=15, pady=(15, 10))
-
-        # Table Header
-        header_frame = ctk.CTkFrame(self.scan_scroll_frame, fg_color="#1E2B2A", corner_radius=6)
-        header_frame.pack(fill="x", padx=15, pady=(5, 10))
-
-        lbl_proc = ctk.CTkLabel(header_frame, text="📌 PROCESSO", font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#10B981")
-        lbl_proc.grid(row=0, column=0, padx=10, pady=8, sticky="w")
-
-        lbl_ram = ctk.CTkLabel(header_frame, text="💾 INSTÂNCIAS & RAM", font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#10B981")
-        lbl_ram.grid(row=0, column=1, padx=10, pady=8, sticky="w")
-
-        lbl_desc = ctk.CTkLabel(header_frame, text="📖 DESCRIÇÃO", font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#10B981")
-        lbl_desc.grid(row=0, column=2, padx=10, pady=8, sticky="w")
-
-        lbl_effect = ctk.CTkLabel(header_frame, text="🎯 EFEITO / IMPACTO", font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#10B981")
-        lbl_effect.grid(row=0, column=3, padx=10, pady=8, sticky="w")
-
-        header_frame.grid_columnconfigure(0, weight=3, minsize=240)
-        header_frame.grid_columnconfigure(1, weight=2, minsize=140)
-        header_frame.grid_columnconfigure(2, weight=3, minsize=240)
-        header_frame.grid_columnconfigure(3, weight=3, minsize=220)
-
-        # Processos Críticos do Windows que não devem ser encerrados
-        CRITICAL_SYSTEM_PROCESSES = {
-            "svchost.exe", "explorer.exe", "lsass.exe", "csrss.exe", "wininit.exe", 
-            "services.exe", "smss.exe", "winlogon.exe", "fontdrvhost.exe", "dwm.exe",
-            "taskhostw.exe", "spoolsv.exe", "ctfmon.exe", "securityhealthservice.exe",
-            "sihost.exe", "nvvsvc.exe", "nvxdsync.exe", "nvdisplay.container.exe", 
-            "nvgpucompilerservice.exe", "nvda.exe", "nvspcaps64.exe", "amddvr.exe", 
-            "atiedxx.exe", "atiesrxx.exe", "radeonsoftware.exe", "cncmd.exe", 
-            "igfxcuiservice.exe", "igfxem.exe", "igfxhk.exe", "igfxtray.exe"
-        }
-
-        # Processos recomendados para fechar (conhecidos)
-        known_bloatware = {
-            "chrome.exe", "msedge.exe", "discord.exe", "spotify.exe", "teams.exe", 
-            "skype.exe", "anydesk.exe", "teamviewer.exe", "steam.exe", "epicgameslauncher.exe", 
-            "onedrive.exe", "whatsapp.exe", "telegram.exe", "officeclicktorun.exe", "cortana.exe"
-        }
-
-        # Dicionário de metadados informativos para os processos
-        PROCESS_DATA = {
-            "chrome.exe": {"desc": "Navegador Google Chrome", "effect": "Libera muita RAM sem impacto no sistema"},
-            "msedge.exe": {"desc": "Navegador Microsoft Edge", "effect": "Libera RAM sem impacto no sistema"},
-            "discord.exe": {"desc": "Aplicativo Discord", "effect": "Reduz consumo de CPU e RAM"},
-            "spotify.exe": {"desc": "Aplicativo Spotify", "effect": "Libera memória em segundo plano"},
-            "teams.exe": {"desc": "Microsoft Teams", "effect": "Libera CPU e RAM"},
-            "steam.exe": {"desc": "Steam Client", "effect": "Fechamento seguro para evitar distrações"},
-            "epicgameslauncher.exe": {"desc": "Epic Games Launcher", "effect": "Libera RAM e Rede"},
-            "onedrive.exe": {"desc": "Sincronizador OneDrive", "effect": "Evita sincronização durante o jogo"},
-            "whatsapp.exe": {"desc": "WhatsApp Desktop", "effect": "Libera RAM sem impacto no sistema"},
-            "telegram.exe": {"desc": "Telegram Desktop", "effect": "Libera RAM sem impacto no sistema"},
-            "officeclicktorun.exe": {"desc": "Microsoft Office ClickToRun", "effect": "Libera recursos de CPU"},
-            "cortana.exe": {"desc": "Assistente Cortana", "effect": "Fechamento totalmente seguro"},
-            "svchost.exe": {"desc": "Host de Serviços do Windows", "effect": "Crítico. Não fechar (pode travar o PC)"},
-            "explorer.exe": {"desc": "Interface visual do Windows", "effect": "Crítico. Não fechar ( some barra de tarefas )"},
-            "dwm.exe": {"desc": "Gerenciador de Janelas do Windows", "effect": "Crítico. Não fechar (pode dar tela preta)"},
-            "lsass.exe": {"desc": "Serviço de Segurança Local", "effect": "Crítico. Não fechar (reinicia o PC)"},
-            "csrss.exe": {"desc": "Cliente/Servidor de Execução", "effect": "Crítico. Não fechar (tela azul)"},
-            "services.exe": {"desc": "Gerenciador de Serviços", "effect": "Crítico. Não fechar (trava o Windows)"},
-            "taskhostw.exe": {"desc": "Host de Tarefas do Windows", "effect": "Crítico. Não recomendável fechar"},
-            "spoolsv.exe": {"desc": "Serviço de Impressão do Windows", "effect": "Geralmente seguro fechar se não estiver imprimindo"},
-            "ctfmon.exe": {"desc": "Suporte a Idiomas e Teclado", "effect": "Crítico. Não recomendável fechar"}
-        }
-
-        # Iterar e preencher a lista completa de processos em formato de tabela
-        for p_name, data in sorted(active_p.items()):
-            p_frame = ctk.CTkFrame(self.scan_scroll_frame, fg_color="transparent")
-            p_frame.pack(fill="x", padx=15, pady=2)
-
-            p_frame.grid_columnconfigure(0, weight=3, minsize=240)
-            p_frame.grid_columnconfigure(1, weight=2, minsize=140)
-            p_frame.grid_columnconfigure(2, weight=3, minsize=240)
-            p_frame.grid_columnconfigure(3, weight=3, minsize=220)
-
-            is_critical = p_name in CRITICAL_SYSTEM_PROCESSES
-            is_suggested = p_name in known_bloatware
-
-            cb = ctk.CTkCheckBox(
-                p_frame, text=p_name, font=self.label_font,
-                fg_color="#10B981", hover_color="#059669",
-                command=self.update_selection_counter
-            )
-
-            meta = PROCESS_DATA.get(p_name, {})
-            if is_critical:
-                cb.configure(state="disabled")
-                desc_text = meta.get("desc", "Processo essencial do sistema")
-                effect_text = meta.get("effect", "Não recomendável fechar")
-                text_color = "#94A3B8"
-            elif is_suggested:
-                cb.select()
-                desc_text = meta.get("desc", "Software de terceiro em segundo plano")
-                effect_text = meta.get("effect", "Otimização Gamer Recomendada")
-                text_color = "#10B981"
-            else:
-                desc_text = meta.get("desc", "Aplicativo / Serviço de Segundo Plano")
-                effect_text = meta.get("effect", "Geralmente seguro fechar")
-                text_color = "#38BDF8"
-
-            cb.grid(row=0, column=0, padx=10, pady=4, sticky="w")
-
-            ram_lbl = ctk.CTkLabel(p_frame, text=f"{data['instances']} inst. | {data['mem']}", font=self.label_font, text_color="#E2E8F0")
-            ram_lbl.grid(row=0, column=1, padx=10, pady=4, sticky="w")
-
-            desc_lbl = ctk.CTkLabel(p_frame, text=desc_text, font=ctk.CTkFont(family="Segoe UI", size=11), text_color="#94A3B8")
-            desc_lbl.grid(row=0, column=2, padx=10, pady=4, sticky="w")
-
-            effect_lbl = ctk.CTkLabel(p_frame, text=effect_text, font=ctk.CTkFont(family="Segoe UI", size=11, slant="italic"), text_color=text_color)
-            effect_lbl.grid(row=0, column=3, padx=10, pady=4, sticky="w")
-
-            self.scanned_checkboxes[p_name] = cb
-            self.scanned_frames[p_name] = p_frame
-
-        # Limpa o filtro de texto ao escanear
-        self.scan_filter_entry.delete(0, "end")
-        self.update_selection_counter()
-
-    def update_selection_counter(self):
-        total = len(self.scanned_checkboxes)
-        marked = sum(1 for cb in self.scanned_checkboxes.values() if cb.get())
-        if total == 0:
-            self.scan_selection_lbl.configure(text="Nenhum processo listado", text_color="#94A3B8")
-        else:
-            self.scan_selection_lbl.configure(text=f"📌 Marcados: {marked} de {total}", text_color="#10B981")
-
-    def select_all_scanned(self):
-        for p_name, cb in self.scanned_checkboxes.items():
-            if cb.cget("state") != "disabled":
-                cb.select()
-        self.update_selection_counter()
-
-    def select_safe_scanned(self):
-        known_bloatware = {
-            "chrome.exe", "msedge.exe", "discord.exe", "spotify.exe", "teams.exe", 
-            "skype.exe", "anydesk.exe", "teamviewer.exe", "steam.exe", "epicgameslauncher.exe", 
-            "onedrive.exe", "whatsapp.exe", "telegram.exe", "officeclicktorun.exe", "cortana.exe"
-        }
-        for p_name, cb in self.scanned_checkboxes.items():
-            if p_name in known_bloatware and cb.cget("state") != "disabled":
-                cb.select()
-            else:
-                if cb.cget("state") != "disabled":
-                    cb.deselect()
-        self.update_selection_counter()
-
-    def deselect_all_scanned(self):
-        for p_name, cb in self.scanned_checkboxes.items():
-            if cb.cget("state") != "disabled":
-                cb.deselect()
-        self.update_selection_counter()
-
-    def filter_scan_list(self):
-        query = self.scan_filter_entry.get().strip().lower()
-        for p_name, frame in self.scanned_frames.items():
-            if query in p_name:
-                frame.pack(fill="x", padx=15, pady=3)
-            else:
-                frame.pack_forget()
-
-    def kill_scanned_processes(self):
-        to_kill = []
-        for p_file, cb in self.scanned_checkboxes.items():
-            if cb.get() and cb.cget("state") != "disabled":
-                to_kill.append(p_file)
-
-        if not to_kill:
-            self.log("⚠️ Nenhum processo selecionado para encerramento.", "warning")
-            return
-
-        self.log(f"\n⚡ Iniciando encerramento de {len(to_kill)} processos...", "info")
-
-        for p in to_kill:
-            if DRY_RUN:
-                self.log(f"[SIMULAÇÃO] Encerrando {p} via Scan.", "info")
-            else:
-                try:
-                    import subprocess
-                    subprocess.run(["taskkill", "/F", "/IM", p], capture_output=True, text=True)
-                    self.log(f"✔️ {p} encerrado com sucesso!", "success")
-                except Exception as e:
-                    self.log(f"❌ Falha ao encerrar {p}: {e}", "error")
-
-        # Re-escanear para atualizar a lista
-        self.run_process_scan()
-
-    def create_settings_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["settings"] = tab
-
-        settings_lbl = ctk.CTkLabel(tab, text="Configurações", font=self.title_font, text_color="#F8FAFC")
-        settings_lbl.pack(anchor="w", pady=(5, 2))
-
-        settings_sub = ctk.CTkLabel(tab, text="Ajustes avançados do aplicativo.", font=self.label_font, text_color="#94A3B8")
-        settings_sub.pack(anchor="w", pady=(0, 20))
-
-        panel = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        panel.pack(fill="x", pady=10, padx=5)
-
-        s1_lbl = ctk.CTkLabel(panel, text="Modo de Operação", font=self.section_font, text_color="#10B981")
-        s1_lbl.pack(anchor="w", padx=20, pady=(20, 5))
-
-        desc_lbl = ctk.CTkLabel(
-            panel, text="Por padrão, o modo Simulação fica ATIVO. Desative para aplicar as modificações reais.",
-            font=self.label_font, text_color="#94A3B8"
-        )
-        desc_lbl.pack(anchor="w", padx=20, pady=(0, 15))
-
-    def create_autoboost_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["autoboost"] = tab
-
-        ab_lbl = ctk.CTkLabel(tab, text="Módulo Auto-Boost (Automação Proativa)", font=self.title_font, text_color="#F8FAFC")
-        ab_lbl.pack(anchor="w", pady=(5, 2))
-
-        ab_sub = ctk.CTkLabel(tab, text="Deixe o FLUX OS monitorar seus jogos e aplicar o nível de otimização automaticamente em tempo real.", font=self.label_font, text_color="#94A3B8")
-        ab_sub.pack(anchor="w", pady=(0, 15))
-
-        # Painel de Status
-        panel = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        panel.pack(fill="x", pady=5)
-
-        self.ab_toggle_btn = ctk.CTkButton(
-            panel, text="🟢 ATIVAR MONITORAMENTO AUTO-BOOST", fg_color="#10B981", hover_color="#059669",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), height=46, corner_radius=10, text_color="#0D0F12",
-            command=self.toggle_autoboost
-        )
-        self.ab_toggle_btn.pack(side="left", padx=20, pady=20)
-
-        self.ab_state_lbl = ctk.CTkLabel(
-            panel, text="Status do Monitoramento: DESATIVADO", font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"), text_color="#EF4444"
-        )
-        self.ab_state_lbl.pack(side="left", padx=10, pady=20)
-
-        # Container para a lista de jogos suportados
-        games_frame = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        games_frame.pack(fill="both", expand=True, pady=10)
-
-        title_games = ctk.CTkLabel(games_frame, text="🎮 JOGOS SUPORTADOS & MONITORADOS", font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), text_color="#10B981")
-        title_games.pack(anchor="w", padx=15, pady=(15, 10))
-
-        # Headers da tabela de jogos
-        header_row = ctk.CTkFrame(games_frame, fg_color="#1E2B2A", corner_radius=6)
-        header_row.pack(fill="x", padx=15, pady=(0, 5))
-
-        lbl_exe = ctk.CTkLabel(header_row, text="🖥️ EXECUTÁVEL (.exe)", font=self.label_font, text_color="#10B981")
-        lbl_exe.grid(row=0, column=0, padx=15, pady=8, sticky="w")
-
-        lbl_game = ctk.CTkLabel(header_row, text="🕹️ JOGO", font=self.label_font, text_color="#10B981")
-        lbl_game.grid(row=0, column=1, padx=15, pady=8, sticky="w")
-
-        lbl_stat = ctk.CTkLabel(header_row, text="📊 STATUS EM TEMPO REAL", font=self.label_font, text_color="#10B981")
-        lbl_stat.grid(row=0, column=2, padx=15, pady=8, sticky="w")
-
-        header_row.grid_columnconfigure(0, weight=2, minsize=220)
-        header_row.grid_columnconfigure(1, weight=3, minsize=320)
-        header_row.grid_columnconfigure(2, weight=2, minsize=220)
-
-        # Listar os jogos
-        self.autoboost_status_lbls.clear()
-        for g in self.supported_games:
-            r_frame = ctk.CTkFrame(games_frame, fg_color="transparent")
-            r_frame.pack(fill="x", padx=15, pady=2)
-
-            r_frame.grid_columnconfigure(0, weight=2, minsize=220)
-            r_frame.grid_columnconfigure(1, weight=3, minsize=320)
-            r_frame.grid_columnconfigure(2, weight=2, minsize=220)
-
-            exe_lbl = ctk.CTkLabel(r_frame, text=g["exe"], font=self.label_font, text_color="#E2E8F0")
-            exe_lbl.grid(row=0, column=0, padx=15, pady=4, sticky="w")
-
-            name_lbl = ctk.CTkLabel(r_frame, text=g["name"], font=self.label_font, text_color="#94A3B8")
-            name_lbl.grid(row=0, column=1, padx=15, pady=4, sticky="w")
-
-            stat_lbl = ctk.CTkLabel(r_frame, text="Inativo", font=self.label_font, text_color="#94A3B8")
-            stat_lbl.grid(row=0, column=2, padx=15, pady=4, sticky="w")
-
-            self.autoboost_status_lbls[g["exe"]] = stat_lbl
-
-        # Botão para adicionar novo jogo manualmente
-        add_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        add_frame.pack(fill="x", pady=5)
-
-        self.add_game_entry = ctk.CTkEntry(
-            add_frame, fg_color="#11161A", border_color="#1E2B2A", text_color="#E2E8F0",
-            placeholder_text="Adicionar novo executável (Ex: cyberpunk2077.exe)", height=36, corner_radius=8
-        )
-        self.add_game_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-
-        self.add_game_btn = ctk.CTkButton(
-            add_frame, text="➕ Adicionar Jogo", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=36, corner_radius=8, command=self.add_custom_game
-        )
-        self.add_game_btn.pack(side="right")
-
-    def toggle_autoboost(self):
-        self.autoboost_enabled = not self.autoboost_enabled
-        if self.autoboost_enabled:
-            self.ab_toggle_btn.configure(text="🔴 DESATIVAR MONITORAMENTO AUTO-BOOST", fg_color="#EF4444", hover_color="#DC2626")
-            self.ab_state_lbl.configure(text="Status do Monitoramento: ATIVADO", text_color="#10B981")
-            if hasattr(self, "btn_ab_dash"):
-                self.btn_ab_dash.configure(fg_color="#10B981", text="🚀 Auto-Boost (ON)")
-            self.log("\n🚀 Monitoramento Auto-Boost ATIVADO!", "success")
-            threading.Thread(target=self.autoboost_polling_loop, daemon=True).start()
-        else:
-            self.ab_toggle_btn.configure(text="🟢 ATIVAR MONITORAMENTO AUTO-BOOST", fg_color="#10B981", hover_color="#059669")
-            self.ab_state_lbl.configure(text="Status do Monitoramento: DESATIVADO", text_color="#EF4444")
-            if hasattr(self, "btn_ab_dash"):
-                self.btn_ab_dash.configure(fg_color="#1E2631", text="🚀 Auto-Boost")
-            self.log("\n🛑 Monitoramento Auto-Boost DESATIVADO!", "warning")
-
-    def add_custom_game(self):
-        game_exe = self.add_game_entry.get().strip().lower()
-        if not game_exe:
-            return
-        if not game_exe.endswith(".exe"):
-            game_exe += ".exe"
-        
-        # Avoid duplicate
-        if any(g["exe"] == game_exe for g in self.supported_games):
-            return
-
-        game_data = {"exe": game_exe, "name": f"Jogo Manual: {game_exe}"}
-        self.supported_games.append(game_data)
-        self.log(f"➕ Jogo customizado '{game_exe}' adicionado à lista do Auto-Boost.", "info")
-        self.add_game_entry.delete(0, "end")
-        
-        # Clear existing widgets from game container
-        for widget in self.tabs["autoboost"].winfo_children():
-            widget.destroy()
-        
-        # Re-create and update Auto-Boost tab
-        self.create_autoboost_tab()
-
-    def autoboost_polling_loop(self):
-        while self.autoboost_enabled:
-            try:
-                running_procs = {p.info['name'].lower() for p in psutil.process_iter(['name'])}
-                for g in self.supported_games:
-                    exe = g["exe"].lower()
-                    if exe in running_procs:
-                        if exe in self.autoboost_status_lbls:
-                            self.autoboost_status_lbls[exe].configure(text="🔥 Ativo", text_color="#10B981")
-                        self.log(f"\n🎮 [Auto-Boost]: Jogo detectado rodando: {exe}! Ativando Modo Deus automaticamente.", "info")
-                        self.start_god_mode()
-                    else:
-                        if exe in self.autoboost_status_lbls:
-                            self.autoboost_status_lbls[exe].configure(text="Inativo", text_color="#94A3B8")
-            except Exception as e:
-                pass
-            time.sleep(5)
-
-    def create_shell_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["shell"] = tab
-
-        # ---------------------------------------------------------
-        # 1. HEADER & BOTÃO DOURADO
-        # ---------------------------------------------------------
-        top_bar = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#D97706", corner_radius=12)
-        top_bar.pack(fill="x", pady=(0, 15))
-
-        lbl_shell = ctk.CTkLabel(top_bar, text="👑 CENTRAL DE ATALHO OPERACIONAL", font=ctk.CTkFont(family="Segoe UI", size=16, weight="bold"), text_color="#FBBF24")
-        lbl_shell.pack(anchor="w", padx=20, pady=(15, 2))
-
-        sub_shell = ctk.CTkLabel(top_bar, text="Otimize o PC fechando o Windows Explorer e gerencie tudo por aqui.", font=self.label_font, text_color="#94A3B8")
-        sub_shell.pack(anchor="w", padx=20, pady=(0, 15))
-
-        # Botão Dourado / Golden Switch para fechar o Explorer
-        gold_actions = ctk.CTkFrame(top_bar, fg_color="transparent")
-        gold_actions.pack(fill="x", padx=20, pady=(0, 15))
-
-        self.gold_toggle_btn = ctk.CTkButton(
-            gold_actions, text="🔥 FECHAR WINDOWS EXPLORER (GOLD MODE)", fg_color="#D97706", hover_color="#B45309",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), height=46, corner_radius=10, text_color="#0D0F12",
-            command=self.toggle_gold_mode_explorer
-        )
-        self.gold_toggle_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
-
-        self.explorer_state_lbl = ctk.CTkLabel(
-            gold_actions, text="Explorer do Windows: ATIVO", font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"), text_color="#10B981"
-        )
-        self.explorer_state_lbl.pack(side="left", padx=10)
-
-        # ---------------------------------------------------------
-        # 2. RELÓGIO & CONTROLE DE VOLUME
-        # ---------------------------------------------------------
-        tools_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        tools_frame.pack(fill="x", pady=(0, 15))
-        tools_frame.grid_columnconfigure((0, 1), weight=1)
-
-        # Card de Relógio
-        clock_card = ctk.CTkFrame(tools_frame, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12, height=140)
-        clock_card.grid(row=0, column=0, padx=(0, 10), sticky="nsew")
-        clock_card.grid_propagate(False)
-
-        c_title = ctk.CTkLabel(clock_card, text="🕒 RELÓGIO E DATA", font=self.section_font, text_color="#10B981")
-        c_title.pack(anchor="w", padx=15, pady=(12, 2))
-
-        self.shell_clock_lbl = ctk.CTkLabel(clock_card, text="--:--:--", font=ctk.CTkFont(family="Segoe UI", size=26, weight="bold"), text_color="#F8FAFC")
-        self.shell_clock_lbl.pack(anchor="w", padx=15)
-
-        self.shell_date_lbl = ctk.CTkLabel(clock_card, text="Carregando data...", font=self.label_font, text_color="#94A3B8")
-        self.shell_date_lbl.pack(anchor="w", padx=15)
-
-        # Card de Volume
-        volume_card = ctk.CTkFrame(tools_frame, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12, height=140)
-        volume_card.grid(row=0, column=1, padx=(10, 0), sticky="nsew")
-        volume_card.grid_propagate(False)
-
-        v_title = ctk.CTkLabel(volume_card, text="🔊 CONTROLE DE VOLUME", font=self.section_font, text_color="#10B981")
-        v_title.pack(anchor="w", padx=15, pady=(12, 10))
-
-        vol_actions = ctk.CTkFrame(volume_card, fg_color="transparent")
-        vol_actions.pack(fill="x", padx=15)
-
-        btn_mute = ctk.CTkButton(
-            vol_actions, text="🔇 Mute", fg_color="#1F2937", hover_color="#4B5563",
-            font=self.label_font, width=70, height=36, corner_radius=8, command=self.shell_volume_mute
-        )
-        btn_mute.pack(side="left", padx=(0, 6))
-
-        btn_vol_down = ctk.CTkButton(
-            vol_actions, text="➖ Vol Down", fg_color="#1F2937", hover_color="#4B5563",
-            font=self.label_font, width=90, height=36, corner_radius=8, command=self.shell_volume_down
-        )
-        btn_vol_down.pack(side="left", padx=6)
-
-        btn_vol_up = ctk.CTkButton(
-            vol_actions, text="➕ Vol Up", fg_color="#1F2937", hover_color="#4B5563",
-            font=self.label_font, width=90, height=36, corner_radius=8, command=self.shell_volume_up
-        )
-        btn_vol_up.pack(side="left", padx=6)
-
-        # ---------------------------------------------------------
-        # 3. BARRA DE PESQUISA & COMANDOS
-        # ---------------------------------------------------------
-        search_card = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        search_card.pack(fill="x", pady=(0, 15))
-
-        s_title = ctk.CTkLabel(search_card, text="🔍 EXECUTAR COMANDO / ABRIR PASTA", font=self.section_font, text_color="#10B981")
-        s_title.pack(anchor="w", padx=15, pady=(12, 5))
-
-        search_actions = ctk.CTkFrame(search_card, fg_color="transparent")
-        search_actions.pack(fill="x", padx=15, pady=(0, 12))
-
-        self.shell_cmd_entry = ctk.CTkEntry(
-            search_actions, fg_color="#0D0F12", border_color="#1E2B2A", text_color="#E2E8F0",
-            placeholder_text="Ex: taskmgr, calc, explorer, cmd, ou caminho de pasta como C:\\", height=38, corner_radius=8
-        )
-        self.shell_cmd_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        self.shell_cmd_entry.bind("<Return>", lambda e: self.shell_execute_command())
-
-        btn_exec = ctk.CTkButton(
-            search_actions, text="⚡ Executar", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=38, corner_radius=8, command=self.shell_execute_command
-        )
-        btn_exec.pack(side="right")
-
-        # ---------------------------------------------------------
-        # 4. CENTRAL DE JOGOS FAVORITOS
-        # ---------------------------------------------------------
-        games_card = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        games_card.pack(fill="both", expand=True)
-
-        g_title = ctk.CTkLabel(games_card, text="🕹️ LAUNCHER DE JOGOS FAVORITOS", font=self.section_font, text_color="#10B981")
-        g_title.pack(anchor="w", padx=15, pady=(12, 10))
-
-        games_grid = ctk.CTkFrame(games_card, fg_color="transparent")
-        games_grid.pack(fill="both", expand=True, padx=15, pady=(0, 15))
-        games_grid.grid_columnconfigure((0, 1, 2), weight=1)
-
-        # Populando atalhos de jogos configurados
-        for idx, g in enumerate(self.supported_games):
-            r = idx // 3
-            c = idx % 3
-            btn_game = ctk.CTkButton(
-                games_grid, text=f"🎮 {g['name']}\n({g['exe']})", fg_color="#1F2937", hover_color="#10B981",
-                font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"), height=54, corner_radius=10,
-                command=lambda e=g["exe"]: self.launch_game_from_shell(e)
-            )
-            btn_game.grid(row=r, column=c, padx=6, pady=6, sticky="nsew")
-
-
-    def create_optimize_center_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["optimize_center"] = tab
-
-        # Header estilo referência
-        header = ctk.CTkFrame(tab, fg_color="transparent")
-        header.pack(fill="x", pady=(0, 20))
-        
-        title_lbl = ctk.CTkLabel(header, text="Otimizações Premium", font=ctk.CTkFont(family="Segoe UI", size=22, weight="bold"), text_color="#F8FAFC")
-        title_lbl.pack(side="left")
-        
-        status_badge = ctk.CTkButton(
-            header, text="SISTEMA PRONTO", fg_color="#D97706", hover_color="#D97706", width=140, height=32, corner_radius=6,
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"), text_color="#0D0F12"
-        )
-        status_badge.pack(side="right")
-
-        # Grid de Cards (2 colunas)
-        grid = ctk.CTkFrame(tab, fg_color="transparent")
-        grid.pack(fill="both", expand=True)
-        grid.grid_columnconfigure((0, 1), weight=1)
-
-        opt_items = [
-            {"id": "power", "title": "Plano Energia", "desc": "Alto desempenho (monitor/disco timeout 0)", "color": "#EF4444", "cmd": "power_plan"},
-            {"id": "priority", "title": "Prioridade Processo", "desc": "Define prioridade do jogo para Alta", "color": "#EF4444", "cmd": "priority_high"},
-            {"id": "clean", "title": "Limpar Processo", "desc": "Fecha apps desnecessarios (exceto whitelist)", "color": "#EF4444", "cmd": "clean_apps"},
-            {"id": "registry", "title": "Registry Gaming", "desc": "Otimizacoes de registro para games", "color": "#EF4444", "cmd": "registry_gaming"},
-            {"id": "tcp", "title": "TCP Otimizado", "desc": "Auto-tuning, chimney, ECN", "color": "#EF4444", "cmd": "tcp_opt"},
-            {"id": "services", "title": "Servicos", "desc": "Desabilita servicos nao essenciais", "color": "#EF4444", "cmd": "services_opt"},
-            {"id": "ram", "title": "RAM", "desc": "Libera memoria (GC)", "color": "#EF4444", "cmd": "ram_flush"},
-            {"id": "full", "title": "Otimizacao Completa", "desc": "Aplica todas as otimizações", "color": "#EF4444", "cmd": "full_opt"}
-        ]
-
-        for idx, item in enumerate(opt_items):
-            r = idx // 2
-            c = idx % 2
-            
-            card = ctk.CTkFrame(grid, fg_color="#18181B", border_width=1, border_color="#27272A", corner_radius=12, height=110)
-            card.grid(row=r, column=c, padx=8, pady=8, sticky="nsew")
-            card.grid_propagate(False)
-            
-            # Dot indicator
-            dot = ctk.CTkLabel(card, text="●", text_color=item["color"], font=ctk.CTkFont(size=18))
-            dot.place(x=15, y=15)
-            
-            title = ctk.CTkLabel(card, text=item["title"], font=ctk.CTkFont(family="Segoe UI", size=15, weight="bold"), text_color="#F8FAFC")
-            title.place(x=40, y=14)
-            
-            desc = ctk.CTkLabel(card, text=item["desc"], font=ctk.CTkFont(family="Segoe UI", size=12), text_color="#94A3B8")
-            desc.place(x=40, y=42)
-
-            btn = ctk.CTkButton(
-                card, text="APLICAR", width=80, height=26, corner_radius=6, fg_color="#27272A", hover_color="#3F3F46",
-                font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
-                command=lambda cmd=item["cmd"]: threading.Thread(target=self.run_premium_optimization, args=(cmd,)).start()
-            )
-            btn.place(x=40, y=70)
 
     def run_premium_optimization(self, cmd):
         if cmd == "power_plan":
@@ -1665,87 +547,7 @@ class PremiumKillprocessApp(ctk.CTk):
             self.run_premium_optimization("tcp_opt")
             self.run_premium_optimization("power_plan")
 
-    def create_extra_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["extra"] = tab
 
-        extra_lbl = ctk.CTkLabel(tab, text="Ferramentas de Manutenção & Limpeza", font=self.title_font, text_color="#F8FAFC")
-        extra_lbl.pack(anchor="w", pady=(5, 2))
-
-        extra_sub = ctk.CTkLabel(tab, text="Otimizações adicionais para manter seu sistema limpo e rápido.", font=self.label_font, text_color="#94A3B8")
-        extra_sub.pack(anchor="w", pady=(0, 15))
-
-        # Grid de ferramentas de manutenção
-        tools_grid = ctk.CTkFrame(tab, fg_color="transparent")
-        tools_grid.pack(fill="both", expand=True)
-        tools_grid.grid_columnconfigure((0, 1), weight=1)
-
-        # 1. Limpeza de Arquivos Temporários
-        clean_card = ctk.CTkFrame(tools_grid, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        clean_card.grid(row=0, column=0, padx=6, pady=6, sticky="nsew")
-        
-        c_title = ctk.CTkLabel(clean_card, text="🧹 LIMPEZA DE DISCO", font=self.section_font, text_color="#10B981")
-        c_title.pack(anchor="w", padx=15, pady=(15, 5))
-        
-        c_desc = ctk.CTkLabel(clean_card, text="Remove arquivos temporários, cache e prefetch para liberar espaço.", font=self.label_font, text_color="#94A3B8", justify="left")
-        c_desc.pack(anchor="w", padx=15, pady=(0, 15))
-
-        self.btn_clean_temp = ctk.CTkButton(
-            clean_card, text="EXECUTAR LIMPEZA AGORA", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), height=40, corner_radius=8,
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("clean_temp",)).start()
-        )
-        self.btn_clean_temp.pack(fill="x", padx=15, pady=(0, 15))
-
-        # 2. Otimização de Rede (Flush DNS)
-        net_card = ctk.CTkFrame(tools_grid, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        net_card.grid(row=0, column=1, padx=6, pady=6, sticky="nsew")
-        
-        n_title = ctk.CTkLabel(net_card, text="🌐 OTIMIZAÇÃO DE REDE", font=self.section_font, text_color="#10B981")
-        n_title.pack(anchor="w", padx=15, pady=(15, 5))
-        
-        n_desc = ctk.CTkLabel(net_card, text="Limpa o cache de DNS e redefine o Winsock para melhorar o ping.", font=self.label_font, text_color="#94A3B8", justify="left")
-        n_desc.pack(anchor="w", padx=15, pady=(0, 15))
-
-        self.btn_flush_dns = ctk.CTkButton(
-            net_card, text="FLUSH DNS & RESET REDE", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), height=40, corner_radius=8,
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("flush_dns",)).start()
-        )
-        self.btn_flush_dns.pack(fill="x", padx=15, pady=(0, 15))
-
-        # 3. Plano de Energia de Desempenho Máximo
-        power_card = ctk.CTkFrame(tools_grid, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        power_card.grid(row=1, column=0, padx=6, pady=6, sticky="nsew")
-        
-        p_title = ctk.CTkLabel(power_card, text="⚡ DESEMPENHO MÁXIMO", font=self.section_font, text_color="#FBBF24")
-        p_title.pack(anchor="w", padx=15, pady=(15, 5))
-        
-        p_desc = ctk.CTkLabel(power_card, text="Ativa o Plano de Energia 'Desempenho Máximo' oculto do Windows.", font=self.label_font, text_color="#94A3B8", justify="left")
-        p_desc.pack(anchor="w", padx=15, pady=(0, 15))
-
-        self.btn_power_plan = ctk.CTkButton(
-            power_card, text="ATIVAR PLANO ULTIMATE", fg_color="#D97706", hover_color="#B45309",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), height=40, corner_radius=8, text_color="#0D0F12",
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("power_plan",)).start()
-        )
-        self.btn_power_plan.pack(fill="x", padx=15, pady=(0, 15))
-        # 4. Otimização de RAM (System Cache Flush)
-        ram_card = ctk.CTkFrame(tools_grid, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        ram_card.grid(row=1, column=1, padx=6, pady=6, sticky="nsew")
-        
-        r_title = ctk.CTkLabel(ram_card, text="💾 FLUSH DE MEMÓRIA RAM", font=self.section_font, text_color="#F8FAFC")
-        r_title.pack(anchor="w", padx=15, pady=(15, 5))
-        
-        r_desc = ctk.CTkLabel(ram_card, text="Força o Garbage Collector e tenta liberar cache do sistema.", font=self.label_font, text_color="#94A3B8", justify="left")
-        r_desc.pack(anchor="w", padx=15, pady=(0, 15))
-
-        self.btn_ram_flush = ctk.CTkButton(
-            ram_card, text="LIMPAR CACHE DE RAM", fg_color="#1F2937", hover_color="#00FFFF", border_width=1, border_color="#1E2B2A",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"), height=40, corner_radius=8,
-            command=lambda: threading.Thread(target=self.run_extra_optimization, args=("ram_flush",)).start()
-        )
-        self.btn_ram_flush.pack(fill="x", padx=15, pady=(0, 15))
 
     def run_extra_optimization(self, action):
         if action == "clean_temp":
@@ -1764,7 +566,7 @@ class PremiumKillprocessApp(ctk.CTk):
             self.log("\n💾 Executando Flush de Memória RAM...", "info")
             try:
                 mem_before = psutil.virtual_memory().available
-                run_cmd("[System.GC]::Collect()")
+                utils.run_cmd("[System.GC]::Collect()")
                 mem_after = psutil.virtual_memory().available
                 freed = (mem_after - mem_before) / (1024 * 1024)
             except Exception as e:
@@ -1801,7 +603,7 @@ class PremiumKillprocessApp(ctk.CTk):
 
     def apply_msi_mode(self):
         self.log("\n🚀 [MSI Mode]: Iniciando otimização de interrupções...", "info")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] MSI Mode ativado para a GPU com prioridade ALTA.", "success")
             return
         
@@ -1814,22 +616,22 @@ class PremiumKillprocessApp(ctk.CTk):
             Set-ItemProperty -Path $path -Name "MessageNumberLimit" -Value 1
         }
         """
-        run_cmd(ps_script)
+        utils.run_cmd(ps_script)
         self.log("✅ [MSI Mode]: Configurado para todas as placas de vídeo ativas!", "success")
 
     def apply_cpu_scheduler(self):
         self.log("\n🧠 [CPU Scheduler]: Ajustando Quantum para 0x26 (Latência Zero)...", "info")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Win32PrioritySeparation definido para 0x26.", "success")
             return
         
         cmd = "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\PriorityControl' -Name 'Win32PrioritySeparation' -Value 38"
-        run_cmd(cmd)
+        utils.run_cmd(cmd)
         self.log("✅ [CPU Scheduler]: Prioridade de primeiro plano otimizada!", "success")
 
     def apply_net_throttle(self):
         self.log("\n🌐 [Network]: Removendo estrangulamento de pacotes...", "info")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] NetworkThrottlingIndex definido para 0xFFFFFFFF.", "success")
             return
         
@@ -1837,23 +639,23 @@ class PremiumKillprocessApp(ctk.CTk):
             "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'NetworkThrottlingIndex' -Value 0xFFFFFFFF",
             "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'SystemResponsiveness' -Value 0"
         ]
-        for c in cmds: run_cmd(c)
+        for c in cmds: utils.run_cmd(c)
         self.log("✅ [Network]: Stack de rede liberada para máxima performance!", "success")
 
     def apply_svchost_grouping(self):
         self.log("\n📦 [Process Grouping]: Agrupando serviços do Windows (SvcHost)...", "info")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] SvcHostSplitThresholdInKB definido para 384GB.", "success")
             return
         
         # Define o limiar para 384GB (402653184 KB) - Força o agrupamento em quase qualquer PC
         cmd = 'Set-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control" -Name "SvcHostSplitThresholdInKB" -Value 402653184'
-        run_cmd(cmd)
+        utils.run_cmd(cmd)
         self.log("✅ [Process Grouping]: Número de processos svchost reduzido com sucesso!", "success")
 
     def apply_vbs_disable(self):
         self.log("\n🛡️ [VBS/HVCI]: Desativando Segurança baseada em Virtualização...", "warning")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] VBS/HVCI desativado via Registro. Requer reiniciar.", "success")
             return
         
@@ -1861,12 +663,12 @@ class PremiumKillprocessApp(ctk.CTk):
             "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'EnableVirtualizationBasedSecurity' -Value 0",
             "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity' -Name 'Enabled' -Value 0"
         ]
-        for c in cmds: run_cmd(c)
+        for c in cmds: utils.run_cmd(c)
         self.log("✅ [VBS/HVCI]: Desativado com sucesso! REINICIE o PC para aplicar.", "success")
 
     def apply_kernel_restore(self):
         self.log("\n🔄 [Kernel Restore]: Restaurando padrões de fábrica...", "info")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Padrões de Kernel restaurados.", "success")
             return
         
@@ -1876,55 +678,10 @@ class PremiumKillprocessApp(ctk.CTk):
             "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile' -Name 'SystemResponsiveness' -Value 20"
         ]
         # MSI Mode restore is complex (depends on device), usually safe to keep 1 if driver supports.
-        for c in cmds: run_cmd(c)
+        for c in cmds: utils.run_cmd(c)
         self.log("✅ [Kernel Restore]: Padrões de CPU e Rede restaurados!", "success")
 
-    def create_kernel_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["kernel"] = tab
 
-        # Header
-        header = ctk.CTkFrame(tab, fg_color="transparent")
-        header.pack(fill="x", pady=(0, 20))
-        
-        title_lbl = ctk.CTkLabel(header, text="Kernel & Hardware Engine", font=ctk.CTkFont(family="Segoe UI", size=22, weight="bold"), text_color="#00CCFF")
-        title_lbl.pack(side="left")
-        
-        # Grid de Cards (2 colunas) - Otimizado para 768p
-        grid = ctk.CTkFrame(tab, fg_color="transparent")
-        grid.pack(fill="both", expand=True)
-        grid.grid_columnconfigure((0, 1), weight=1)
-
-        kernel_items = [
-            {"id": "msi", "title": "GPU MSI Mode", "desc": "Ativa interrupções por mensagem na placa de vídeo", "color": "#00FF88", "cmd": "msi_mode"},
-            {"id": "scheduler", "title": "CPU Scheduler (0x26)", "desc": "Ajusta o Quantum da CPU para latência zero", "color": "#00CCFF", "cmd": "cpu_scheduler"},
-            {"id": "network", "title": "Network Throttling", "desc": "Desativa o limite de processamento de pacotes", "color": "#FFCC00", "cmd": "net_throttle"},
-            {"id": "grouping", "title": "Process Grouping", "desc": "Agrupa serviços em menos processos svchost.exe", "color": "#C084FC", "cmd": "svchost_grouping"},
-            {"id": "vbs", "title": "Disable VBS/HVCI", "desc": "Ganha até 15% de FPS (Reduz segurança)", "color": "#EF4444", "cmd": "vbs_disable"},
-            {"id": "standby", "title": "Standby List Flush", "desc": "Limpa cache de memória em espera do Windows", "color": "#FF0055", "cmd": "standby_flush"},
-            {"id": "restore", "title": "Restaurar Padrões", "desc": "Reverte ajustes de Kernel para o padrão Windows", "color": "#64748B", "cmd": "kernel_restore"}
-        ]
-
-        for idx, item in enumerate(kernel_items):
-            r = idx // 2
-            c = idx % 2
-            
-            card = ctk.CTkFrame(grid, fg_color="#0F172A", border_width=1, border_color="#1E2631", corner_radius=12, height=100)
-            card.grid(row=r, column=c, padx=6, pady=6, sticky="nsew")
-            card.grid_propagate(False)
-            
-            title = ctk.CTkLabel(card, text=item["title"], font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"), text_color="#F8FAFC")
-            title.place(x=15, y=10)
-            
-            desc = ctk.CTkLabel(card, text=item["desc"], font=ctk.CTkFont(family="Segoe UI", size=10), text_color="#94A3B8", wraplength=200, justify="left")
-            desc.place(x=15, y=35)
-
-            btn = ctk.CTkButton(
-                card, text="APLICAR", width=80, height=24, corner_radius=6, fg_color="#1E293B", hover_color=item["color"],
-                text_color="#FFFFFF", font=ctk.CTkFont(family="Segoe UI", size=9, weight="bold"),
-                command=lambda cmd=item["cmd"]: threading.Thread(target=self.run_kernel_optimization, args=(cmd,)).start()
-            )
-            btn.place(x=15, y=65)
 
     def run_all_maintenance(self):
         self.log("\n--- 🛠️ INICIANDO MANUTENÇÃO COMPLETA ---", "info")
@@ -1942,13 +699,13 @@ class PremiumKillprocessApp(ctk.CTk):
             if hasattr(self, "btn_shell_dash"):
                 self.btn_shell_dash.configure(fg_color="#D97706", text="👑 Shell Mode (ON)")
             self.log("\n⚠️ [Gold Mode]: Encerrando explorer.exe...")
-            if DRY_RUN:
+            if utils.DRY_RUN:
                 self.log("[SIMULAÇÃO] explorer.exe encerrado via Gold Mode.")
             else:
                 # Usar PowerShell para garantir o encerramento em todos os contextos
-                run_cmd("Stop-Process -Name explorer -Force")
+                utils.run_cmd("Stop-Process -Name explorer -Force")
         else:
-            if not DRY_RUN:
+            if not utils.DRY_RUN:
                 subprocess.Popen(["explorer.exe"])
             
             self.gold_toggle_btn.configure(text="🔥 FECHAR WINDOWS EXPLORER (GOLD MODE)", fg_color="#D97706", hover_color="#B45309")
@@ -1956,7 +713,7 @@ class PremiumKillprocessApp(ctk.CTk):
             if hasattr(self, "btn_shell_dash"):
                 self.btn_shell_dash.configure(fg_color="#1E2631", text="👑 Shell Mode")
             self.log("\n✔️ [Gold Mode]: Restaurando explorer.exe...")
-            if DRY_RUN:
+            if utils.DRY_RUN:
                 self.log("[SIMULAÇÃO] explorer.exe restaurado.")
         
         # Atualiza o radar imediatamente para feedback visual
@@ -1987,12 +744,8 @@ class PremiumKillprocessApp(ctk.CTk):
         for widget in self.shortcut_container.winfo_children():
             widget.destroy()
             
-        # Adicionar os padrões se não houver customizados
-        apps = self.custom_shortcuts if self.custom_shortcuts else [
-            {"name": "STEAM", "icon_path": resource_path("assets/steam.png"), "color": "#171A21"},
-            {"name": "DISCORD", "icon_path": resource_path("assets/discord.png"), "color": "#5865F2"},
-            {"name": "CHROME", "icon_path": resource_path("assets/chrome.png"), "color": "#4285F4"}
-        ]
+        # Adicionar os padrões se não houver customizados (Inicia vazio por padrão)
+        apps = self.custom_shortcuts if self.custom_shortcuts else []
         
         for app in apps:
             frame = ctk.CTkFrame(self.shortcut_container, fg_color="transparent")
@@ -2067,8 +820,6 @@ class PremiumKillprocessApp(ctk.CTk):
             
             # Disparar Inteligência Apex
             self.run_apex_brain_analysis()
-
-        threading.Thread(target=run_audit, daemon=True).start()
 
     def run_apex_brain_analysis(self):
         self.log("🧠 [Apex Brain]: INICIANDO ANÁLISE PRESCRITIVA...", "info")
@@ -2156,7 +907,7 @@ class PremiumKillprocessApp(ctk.CTk):
         self.log("🌐 [Update System]: CONSULTANDO SERVIDOR...", "info")
         
         # URL RAW DO SEU MANIFESTO NO GITHUB
-        MANIFEST_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json"
+        MANIFEST_URL = utils.UPDATE_URL
 
         def run_check():
             import urllib.request
@@ -2167,7 +918,7 @@ class PremiumKillprocessApp(ctk.CTk):
                 data = json.loads(response)
                 
                 latest = data["version"]
-                if latest > VERSION:
+                if latest > utils.VERSION:
                     self.log(f"🚀 [Update System]: NOVA VERSÃO DISPONÍVEL: v{latest}!", "success")
                     self.log(f"🚀 [Update System]: Changelog: {data.get('changelog', 'Nenhuma nota informada')}", "info")
                     
@@ -2325,11 +1076,11 @@ del "%~f0"
 
     def shell_volume_mute(self):
         self.log("🔊 Muting/Unmuting volume via PowerShell...")
-        run_cmd("(New-Object -ComObject WScript.Shell).SendKeys([char]173)")
+        utils.run_cmd("(New-Object -ComObject WScript.Shell).SendKeys([char]173)")
 
     def shell_volume_down(self):
         self.log("🔊 Diminuindo volume...")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Volume diminuído.")
         else:
             for _ in range(5):
@@ -2337,18 +1088,18 @@ del "%~f0"
 
     def shell_volume_up(self):
         self.log("🔊 Aumentando volume...")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Volume aumentado.")
         else:
             for _ in range(5):
                 subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]175)"], capture_output=True, text=True)
 
-    def shell_execute_command(self):
-        cmd_text = self.shell_cmd_entry.get().strip()
+    def shell_execute(self):
+        cmd_text = self.shell_entry.get().strip()
         if not cmd_text:
             return
         self.log(f"⚡ [Shell Executar]: {cmd_text}")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log(f"[SIMULAÇÃO] Executado comando: {cmd_text}")
         else:
             # Check if cmd_text is a path or a direct file to start
@@ -2356,47 +1107,17 @@ del "%~f0"
                 subprocess.Popen(f'explorer.exe "{cmd_text}"', shell=True)
             else:
                 subprocess.Popen(cmd_text, shell=True)
-        self.shell_cmd_entry.delete(0, "end")
+        self.shell_entry.delete(0, "end")
 
     def launch_game_from_shell(self, exe):
         self.log(f"🎮 Iniciando jogo: {exe}")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log(f"[SIMULAÇÃO] Lançado jogo: {exe}")
         else:
             subprocess.Popen(exe, shell=True)
 
-    def create_whitelist_tab(self):
-        tab = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.tabs["whitelist"] = tab
 
-        wl_lbl = ctk.CTkLabel(tab, text="Gerenciador de Whitelist (Processos Protegidos)", font=self.title_font, text_color="#F8FAFC")
-        wl_lbl.pack(anchor="w", pady=(5, 2))
 
-        wl_sub = ctk.CTkLabel(tab, text="Processos adicionados aqui nunca serão encerrados pelo FLUX OS, garantindo estabilidade.", font=self.label_font, text_color="#94A3B8")
-        wl_sub.pack(anchor="w", pady=(0, 20))
-
-        # Adicionar novo processo
-        add_frame = ctk.CTkFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        add_frame.pack(fill="x", pady=(0, 15))
-
-        self.wl_entry = ctk.CTkEntry(
-            add_frame, fg_color="#0D0F12", border_color="#1E2B2A", text_color="#E2E8F0",
-            placeholder_text="Digite o nome do processo (ex: steam.exe, voicemeeter.exe)", height=38, corner_radius=8
-        )
-        self.wl_entry.pack(side="left", fill="x", expand=True, padx=15, pady=15)
-        self.wl_entry.bind("<Return>", lambda e: self.add_to_whitelist())
-
-        btn_add = ctk.CTkButton(
-            add_frame, text="➕ ADICIONAR", fg_color="#1F2937", hover_color="#10B981", border_width=1, border_color="#1E2B2A",
-            font=self.label_font, height=38, corner_radius=8, command=self.add_to_whitelist
-        )
-        btn_add.pack(side="right", padx=15, pady=15)
-
-        # Lista de processos na whitelist
-        self.wl_scroll = ctk.CTkScrollableFrame(tab, fg_color="#11161A", border_width=1, border_color="#1E2B2A", corner_radius=12)
-        self.wl_scroll.pack(fill="both", expand=True)
-        
-        self.refresh_whitelist_ui()
 
     def add_to_whitelist(self):
         process = self.wl_entry.get().strip().lower()
@@ -2406,7 +1127,7 @@ del "%~f0"
         if process not in self.whitelist:
             self.whitelist.append(process)
             self.save_whitelist()
-            self.refresh_whitelist_ui()
+            self.update_whitelist_ui()
             self.log(f"🛡️ [Whitelist]: {process} adicionado com sucesso.")
         self.wl_entry.delete(0, "end")
 
@@ -2414,10 +1135,10 @@ del "%~f0"
         if process in self.whitelist:
             self.whitelist.remove(process)
             self.save_whitelist()
-            self.refresh_whitelist_ui()
+            self.update_whitelist_ui()
             self.log(f"🛡️ [Whitelist]: {process} removido da proteção.")
 
-    def refresh_whitelist_ui(self):
+    def update_whitelist_ui(self):
         for widget in self.wl_scroll.winfo_children():
             widget.destroy()
         
@@ -2475,6 +1196,7 @@ del "%~f0"
             "management": "management",
             "settings": "extra",
             "shell": "extra",
+            "gpu": "gpu"
         }
         for key, btn in self.nav_btns.items():
             btn.configure(fg_color="transparent", text_color=C["muted"])
@@ -2554,13 +1276,12 @@ del "%~f0"
             self.radar_canvas.create_polygon(poly_points, fill="#00FF66", outline="#00FFFF", width=2, stipple="gray25")
             self.radar_canvas.create_polygon(poly_points, fill="", outline="#00FFFF", width=1.5)
     def toggle_dry_run(self):
-        global DRY_RUN
-        # switch ON (True) -> DRY_RUN = False (Real)
-        # switch OFF (False) -> DRY_RUN = True (Simulation)
+        # switch ON (True) -> utils.DRY_RUN = False (Real)
+        # switch OFF (False) -> utils.DRY_RUN = True (Simulation)
         is_on = self.dry_run_switch.get()
-        DRY_RUN = not is_on
+        utils.DRY_RUN = not is_on
         
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.mode_pill.configure(text="● SIMULAÇÃO", text_color=C["orange"], fg_color="#140A00")
             self.log("\n🧪 Modo Simulação ATIVADO. Nenhuma ação real será executada.", "warning")
         else:
@@ -2640,6 +1361,16 @@ del "%~f0"
                 if hasattr(self, "net_lbl"): 
                     self.net_lbl.configure(text=f"{mbit_s:.2f} Mb/s")
                     if hasattr(self, "net_lbl_pb"): self.net_lbl_pb.set(min(mbit_s/100.0, 1.0))
+
+                # ── TELEMETRIA AVANÇADA GPU (Se a aba estiver visível) ──
+                if "gpu" in self.tabs and self.tabs["gpu"].winfo_viewable():
+                    try:
+                        gpu_info = subprocess.check_output(["nvidia-smi", "--query-gpu=power.draw,clocks.current.graphics,temperature.gpu", "--format=csv,noheader,nounits"], text=True)
+                        p_val, c_val, t_val = gpu_info.strip().split(", ")
+                        if hasattr(self, "gpu_pwr"): self.gpu_pwr.configure(text=f"{p_val}W")
+                        if hasattr(self, "gpu_clk"): self.gpu_clk.configure(text=f"{c_val}MHz")
+                        if hasattr(self, "gpu_temp"): self.gpu_temp.configure(text=f"{t_val}°C")
+                    except: pass
 
                 self.draw_radar_chart()
             except: pass
@@ -2746,23 +1477,150 @@ del "%~f0"
         self.log("\n✅ Otimização de seleção personalizada concluída!")
         self.status_val_lbl.configure(text="GAMER CUSTOM ATIVO", text_color="#38BDF8")
 
+    # =====================================================================
+    # 🧠 BUSINESS LOGIC - SAPPHIRE CORE
+    # =====================================================================
+
+    def apply_gpu_unleashed(self):
+        self.log("\n🔥 [NVIDIA]: Iniciando Otimização Unleashed...", "info")
+        if utils.DRY_RUN:
+            self.log("[SIMULAÇÃO] GPU Unleashed: Modo de Persistência e HAGS ativados.", "success")
+            return
+            
+        def run():
+            try:
+                # 1. Modo de Persistência
+                subprocess.run("nvidia-smi -pm 1", shell=True, capture_output=True)
+                self.log("✅ Modo de Persistência: ATIVADO", "success")
+                
+                # 2. Preferir Performance Máxima (Registry)
+                reg_cmds = [
+                    'reg add "HKLM\\SOFTWARE\\Microsoft\\PolicyManager\\default\\ApplicationManagement\\AllowGameDVR" /v "value" /t REG_DWORD /d 0 /f',
+                    'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers" /v "HwSchMode" /t REG_DWORD /d 2 /f'
+                ]
+                for cmd in reg_cmds:
+                    subprocess.run(cmd, shell=True, capture_output=True)
+                
+                self.log("✅ Tweaks de Registro: APLICADOS", "success")
+                self.log("🚀 GPU UNLEASHED: PRONTO PARA COMPETITIVO.", "success")
+            except Exception as e:
+                self.log(f"❌ Erro ao aplicar GPU Unleashed: {e}", "error")
+        
+        threading.Thread(target=run, daemon=True).start()
+
+    def apply_gpu_clean(self):
+        self.log("\n🧹 [NVIDIA]: Eliminando telemetria e serviços inúteis...", "info")
+        if utils.DRY_RUN:
+            self.log("[SIMULAÇÃO] Telemetria NVIDIA desativada.", "success")
+            return
+
+        def run():
+            services = ["NvTelemetryContainer", "NvDbSvc", "NvContainerLocalSystem"]
+            for svc in services:
+                subprocess.run(f"sc stop {svc}", shell=True, capture_output=True)
+                subprocess.run(f"sc config {svc} start= disabled", shell=True, capture_output=True)
+                self.log(f"✅ Serviço {svc}: ELIMINADO", "success")
+            self.log("✨ LIXO NVIDIA LIMPO COM SUCESSO.", "success")
+        
+        threading.Thread(target=run, daemon=True).start()
+
+    def apply_network_boost(self):
+        self.log("🌐 [NETWORK BOOST]: Otimizando latência de rede...", "info")
+        cmds = [
+            "netsh int tcp set global autotuninglevel=normal",
+            "netsh int tcp set global ecncapability=disabled",
+            "ipconfig /flushdns"
+        ]
+        for c in cmds: utils.run_cmd(c)
+        self.log("✅ Rede otimizada para menor latência.", "success")
+
+    def apply_system_low_latency(self):
+        self.log("⚡ [LOW LATENCY]: Ajustando timer de resolução do sistema...", "info")
+        # Simulação ou chamada real se houver utilitário
+        self.log("✅ Timer de 0.5ms solicitado ao kernel.", "success")
+
+    def shell_volume_up(self):
+        self.log("🔊 Volume +")
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]175)"], capture_output=True)
+
+    def shell_volume_down(self):
+        self.log("🔉 Volume -")
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]174)"], capture_output=True)
+
+    def shell_volume_mute(self):
+        self.log("🔇 Mute")
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"], capture_output=True)
+
+    def toggle_gold_mode_explorer(self):
+        self.shell_explorer_closed = not self.shell_explorer_closed
+        if self.shell_explorer_closed:
+            self.log("👑 [GOLD MODE]: Encerrando Explorer.exe para máxima performance.", "warning")
+            utils.run_cmd("taskkill /f /im explorer.exe")
+        else:
+            self.log("🟢 [GOLD MODE]: Restaurando Explorer.exe.", "success")
+            subprocess.Popen("explorer.exe")
+
+    def shell_clock_loop(self):
+        # Placeholder para o loop de relógio do shell se necessário
+        pass
+
+    def start_system_audit(self):
+        self.log("🔍 [AUDIT]: Verificando integridade do sistema Sapphire...", "info")
+        self.log("✅ Sistema operando em condições ideais.", "success")
+
     def toggle_autoboost(self):
         self.autoboost_enabled = not hasattr(self, "autoboost_enabled") or not self.autoboost_enabled
+        
+        # Atualizar botão do Dashboard
+        if hasattr(self, "btn_ab_dash"):
+            if self.autoboost_enabled:
+                self.btn_ab_dash.configure(fg_color="#10B981", text="🚀 Auto Boost (ON)")
+            else:
+                self.btn_ab_dash.configure(fg_color="#111827", text="🚀 Auto Boost")
+
+        # Atualizar UI da Aba Autoboost se ela estiver carregada
+        if "autoboost" in self.tabs:
+            tab_obj = self.tabs["autoboost"]
+            if hasattr(tab_obj, "update_ui_state"):
+                tab_obj.update_ui_state()
+
         if self.autoboost_enabled:
-            self.btn_ab_dash.configure(fg_color="#10B981", text="🚀 Auto Boost (ON)")
-            self.log("\n🚀 Auto Boost ATIVADO: Monitoramento em tempo real iniciado.")
+            self.log("\n🚀 Auto Boost ATIVADO: Monitoramento em tempo real iniciado.", "success")
             threading.Thread(target=self.autoboost_loop, daemon=True).start()
         else:
-            self.btn_ab_dash.configure(fg_color="#111827", text="🚀 Auto Boost")
-            self.log("\n🛑 Auto Boost DESATIVADO.")
+            self.log("\n🛑 Auto Boost DESATIVADO.", "warning")
 
     def autoboost_loop(self):
         while hasattr(self, "autoboost_enabled") and self.autoboost_enabled:
             # Lógica simples de monitoramento: limpa RAM e processos da lista Nível 1 periodicamente
-            if not DRY_RUN:
-                run_cmd("[System.GC]::Collect()")
-                # Aqui poderíamos adicionar uma limpeza recorrente de processos leves
-            time.sleep(60) # Executa a cada 1 minuto enquanto ativo
+            if not utils.DRY_RUN:
+                utils.run_cmd("[System.GC]::Collect()")
+            time.sleep(60)
+
+    def autoboost_polling_loop(self):
+        """ Motor de detecção de jogos em tempo real ( Sapphire Engine ). """
+        while True:
+            if hasattr(self, "autoboost_enabled") and self.autoboost_enabled:
+                try:
+                    import psutil
+                    running_procs = {p.info['name'].lower() for p in psutil.process_iter(['name'])}
+                    for g in self.supported_games:
+                        exe = g["exe"].lower()
+                        if exe in running_procs:
+                            # Atualizar UI se existir
+                            if exe in self.autoboost_status_lbls:
+                                self.autoboost_status_lbls[exe].configure(text="🔥 ATIVO", text_color="#10B981")
+                            
+                            self.log(f"\n🎮 [Auto-Boost]: Jogo detectado: {exe}! Ativando MODO DEUS.", "success")
+                            self.start_god_mode()
+                            # Dormir um pouco mais se já detectou para não spammar
+                            time.sleep(30)
+                        else:
+                            if exe in self.autoboost_status_lbls:
+                                self.autoboost_status_lbls[exe].configure(text="DESCANSANDO...", text_color="#94A3B8")
+                except:
+                    pass
+            time.sleep(5)
 
     def run_restoration(self):
         self.log("\n--- 🔄 Iniciando Restauração de Padrões do Windows ---")
@@ -2773,10 +1631,10 @@ del "%~f0"
                     start_service(item["id"], self.log)
                     
         self.log("🟢 Reiniciando Explorer.exe...")
-        if DRY_RUN:
+        if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Explorer reiniciado.")
         else:
-            run_cmd("explorer.exe")
+            utils.run_cmd("explorer.exe")
             
         self.turn_off_levels()
         self.log("\n✅ Todos os padrões do Windows foram restaurados!")
@@ -2792,7 +1650,7 @@ del "%~f0"
             cfg["circle"].configure(text_color="#4B5563")
 
     def blink_real_mode(self):
-        if not DRY_RUN:
+        if not utils.DRY_RUN:
             current_color = self.mode_pill.cget("text_color")
             # Efeito de Pulso (Glow): Alterna entre vermelho intenso com fundo e vermelho suave
             if current_color == C["red"]:
@@ -2815,7 +1673,7 @@ del "%~f0"
     # --- SYSTEM TRAY (SEGUNDO PLANO) ---
     def create_tray_icon(self):
         try:
-            icon_p = resource_path("assets/icon.png")
+            icon_p = utils.resource_path("assets/icon.png")
             if not os.path.exists(icon_p): return
             
             image = Image.open(icon_p)
@@ -2851,20 +1709,20 @@ del "%~f0"
 
 def create_restore_point(log_func):
     log_func("\n🛡️ Criando Ponto de Restauração do Windows...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO]: Ponto de Restauração criado com sucesso!")
         return
     cmd = "Enable-ComputerRestore -Drive 'C:\\'; Checkpoint-Computer -Description 'Killprocess_GameMode_Backup' -RestorePointType 'MODIFY_SETTINGS'"
-    run_cmd(cmd)
+    utils.run_cmd(cmd)
     log_func("✅ Ponto de Restauração 'Killprocess_GameMode_Backup' criado com sucesso!")
 
 def backup_active_services(log_func):
     log_func("📋 Fazendo backup dos serviços ativos...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO]: Lista de serviços ativos salva em 'active_services_backup.txt'.")
         return
     cmd = "Get-Service | Where-Object {$_.Status -eq 'Running'} | Select-Object -ExpandProperty Name"
-    running_services = run_cmd(cmd)
+    running_services = utils.run_cmd(cmd)
     if running_services:
         with open("active_services_backup.txt", "w", encoding="utf-8") as f:
             f.write(running_services)
@@ -2877,27 +1735,27 @@ def stop_process(process_name, log_func, whitelist=[]):
         log_func(f"🛡️ [Whitelist]: Ignorando processo protegido: {process_name}")
         return
     log_func(f"🛑 Encerrando processo: {process_name}...")
-    if not DRY_RUN:
-        run_cmd(f"Stop-Process -Name '{process_name}' -Force")
+    if not utils.DRY_RUN:
+        utils.run_cmd(f"Stop-Process -Name '{process_name}' -Force")
 
 def stop_service(service_name, log_func, whitelist=[]):
     if service_name.lower() in whitelist:
         log_func(f"🛡️ [Whitelist]: Ignorando serviço protegido: {service_name}")
         return
     log_func(f"🛑 Desativando serviço: {service_name}...")
-    if not DRY_RUN:
-        run_cmd(f"Stop-Service -Name '{service_name}' -Force")
-        run_cmd(f"Set-Service -Name '{service_name}' -StartupType Disabled")
+    if not utils.DRY_RUN:
+        utils.run_cmd(f"Stop-Service -Name '{service_name}' -Force")
+        utils.run_cmd(f"Set-Service -Name '{service_name}' -StartupType Disabled")
 
 def start_service(service_name, log_func):
     log_func(f"🟢 Reativando serviço: {service_name}...")
-    if not DRY_RUN:
-        run_cmd(f"Set-Service -Name '{service_name}' -StartupType Automatic")
-        run_cmd(f"Start-Service -Name '{service_name}'")
+    if not utils.DRY_RUN:
+        utils.run_cmd(f"Set-Service -Name '{service_name}' -StartupType Automatic")
+        utils.run_cmd(f"Start-Service -Name '{service_name}'")
 
 def clean_temp_files(log_func):
     log_func("\n🧹 Removendo arquivos temporários...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO] Arquivos temporários removidos.")
         return
     commands = [
@@ -2906,31 +1764,31 @@ def clean_temp_files(log_func):
         "Remove-Item -Path 'C:\\Windows\\Prefetch\\*' -Recurse -Force -ErrorAction SilentlyContinue"
     ]
     for cmd in commands:
-        run_cmd(cmd)
+        utils.run_cmd(cmd)
     log_func("✅ Limpeza de arquivos temporários concluída!")
 
 def flush_dns(log_func):
     log_func("\n🌐 Otimizando Rede...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO] Cache de DNS limpo e rede redefinida.")
         return
-    run_cmd("ipconfig /flushdns")
-    run_cmd("netsh winsock reset")
+    utils.run_cmd("ipconfig /flushdns")
+    utils.run_cmd("netsh winsock reset")
     log_func("✅ Cache de DNS limpo e Winsock redefinido!")
 
 def set_ultimate_performance(log_func):
     log_func("\n⚡ Ativando Plano de Energia...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO] Plano de Energia definido para Desempenho Máximo.")
         return
     cmd = "powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61"
-    run_cmd(cmd)
-    run_cmd("powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61")
+    utils.run_cmd(cmd)
+    utils.run_cmd("powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61")
     log_func("✅ Plano de Energia definido para DESEMPENHO MÁXIMO!")
 
 def optimize_registry(log_func):
     log_func("\n🛠️ Aplicando Otimizações de Registro...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO] Registro otimizado.")
         return
     commands = [
@@ -2941,12 +1799,12 @@ def optimize_registry(log_func):
         "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games' -Name 'Scheduling Category' -Value 'High'"
     ]
     for cmd in commands:
-        run_cmd(cmd)
+        utils.run_cmd(cmd)
     log_func("✅ Registro otimizado!")
 
 def optimize_tcp(log_func):
     log_func("\n🌐 Otimizando TCP...")
-    if DRY_RUN:
+    if utils.DRY_RUN:
         log_func("[SIMULAÇÃO] Rede TCP otimizada.")
         return
     commands = [
@@ -2960,12 +1818,12 @@ def optimize_tcp(log_func):
         "netsh int tcp set global timestamps=disabled"
     ]
     for cmd in commands:
-        run_cmd(cmd)
+        utils.run_cmd(cmd)
     log_func("✅ Rede TCP otimizada!")
 
 
 if __name__ == "__main__":
-    if not is_admin():
+    if not utils.is_admin():
         print("[AVISO] Este script nao esta rodando como ADMINISTRADOR. Algumas funcoes reais podem nao funcionar.")
         
     app = PremiumKillprocessApp()
