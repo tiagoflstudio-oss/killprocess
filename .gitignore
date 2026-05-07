@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and Dist
+build/
+dist/
+*.spec
+
+# Local config/backups
+active_services_backup.txt
+license.bin
+whitelist.txt
+
+# OS
+.DS_Store
+Thumbs.db
