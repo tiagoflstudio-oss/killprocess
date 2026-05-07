@@ -1003,7 +1003,11 @@ class PremiumKillprocessApp(ctk.CTk):
                 data = json.loads(response)
                 
                 latest = data["version"]
-                if latest > utils.VERSION:
+                
+                # Comparação numérica robusta (v2.1.32 > v2.1.31)
+                def parse_v(v): return [int(x) for x in v.split('.')]
+                
+                if parse_v(latest) > parse_v(utils.VERSION):
                     self.log(f"🚀 [Update System]: NOVA VERSÃO DISPONÍVEL: v{latest}!", "success")
                     self.log(f"🚀 [Update System]: Changelog: {data.get('changelog', 'Nenhuma nota informada')}", "info")
                     

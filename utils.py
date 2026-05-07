@@ -2,8 +2,8 @@ import os
 import sys
 import subprocess
 
-VERSION = "2.1.31" # Versão Atual (Sapphire Edition)
-DRY_RUN = True  # Modo Simulação por padrão
+VERSION = "2.1.32" # Versão Atual (Sapphire Edition)
+DRY_RUN = False # Modo Real para Release
 UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/killprocess/main/version.json"
 
 def resource_path(relative_path):
