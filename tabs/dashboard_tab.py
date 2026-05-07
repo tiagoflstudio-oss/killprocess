@@ -172,7 +172,7 @@ class DashboardTab(ctk.CTkScrollableFrame):
         self.restore_security_btn = ctk.CTkButton(
             act, text="🛡️  REATIVAR WINDOWS DEFENDER", fg_color="#1E1B4B", hover_color="#3730A3",
             border_width=1, border_color="#4338CA", font=self.fonts["small_bold"], height=35, corner_radius=6,
-            text_color="#E2E8F0", command=self.app.start_restoration)
+            text_color="#E2E8F0", command=lambda: self.app.start_restoration(security_only=True))
         self.restore_security_btn.pack(fill="x", padx=14, pady=(2, 5))
 
         self.app.restore_btn = ctk.CTkButton(

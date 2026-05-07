@@ -8,12 +8,30 @@ import psutil
 import customtkinter as ctk
 import requests
 import json
+import ctypes
 from PIL import Image, ImageTk
 from intelligence import brain # Importar a inteligência do HUD
 import pystray
 from pystray import MenuItem as item
 import random
 import winsound
+
+# =====================================================================
+# 🛡️ TRAVA DE ADMINISTRADOR (AUTO-ELEVATION)
+# =====================================================================
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+if not is_admin():
+    # Re-executa o script com privilégios de administrador
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+    sys.exit()
+
+# =====================================================================
+
 
 # --- NOVOS MÓDULOS MODULARIZADOS ---
 from styles import C, get_fonts
@@ -32,6 +50,7 @@ from tabs.extra_tab import ExtraTab
 from tabs.kernel_tab import KernelTab
 from tabs.shell_tab import ShellTab
 from tabs.whitelist_tab import WhitelistTab
+from tabs.recovery_tab import RecoveryTab
 
 # =====================================================================
 # 🚀 FLUX OS - Otimizador Supremo do Windows para Gamers
@@ -126,7 +145,7 @@ class PremiumKillprocessApp(ctk.CTk):
         w, h = 450, 280
         sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
         gate.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
-        gate.overrideredirect(True)
+        gate.overrideredirect(False)
         gate.configure(fg_color=C["bg"])
 
         # Border Glow
@@ -297,6 +316,7 @@ class PremiumKillprocessApp(ctk.CTk):
         self.tabs["kernel"] = KernelTab(self.content_frame, self)
         self.tabs["shell"] = ShellTab(self.content_frame, self)
         self.tabs["whitelist"] = WhitelistTab(self.content_frame, self)
+        self.tabs["recovery"] = RecoveryTab(self.content_frame, self)
 
         self.switch_tab("dashboard")
 
@@ -417,6 +437,7 @@ class PremiumKillprocessApp(ctk.CTk):
         add_nav_btn("dashboard", "⚡", "INÍCIO")
         add_nav_btn("management", "⚙️", "PROCESSOS")
         add_nav_btn("whitelist", "🛡️", "WHITELIST")
+        add_nav_btn("recovery", "📅", "RECUPERAÇÃO")
         add_nav_btn("scan", "🔍", "SCAN")
         add_nav_btn("optimize_center", "🔥", "OTIMIZAR")
         add_nav_btn("kernel", "🧠", "KERNEL ENGINE")
@@ -1398,8 +1419,8 @@ del "%~f0"
     def start_optimize_selection(self):
         threading.Thread(target=self.run_optimize_selection, daemon=True).start()
 
-    def start_restoration(self):
-        threading.Thread(target=self.run_restoration, daemon=True).start()
+    def start_restoration(self, security_only=False):
+        threading.Thread(target=self.run_restoration, args=(security_only,), daemon=True).start()
 
     def run_full_optimization(self):
         self.log("\n--- 🔥 INICIANDO OTIMIZAÇÃO TOTAL DO SISTEMA (N7 + MANUTENÇÃO) ---")
@@ -1629,39 +1650,86 @@ del "%~f0"
                     pass
             time.sleep(5)
 
-    def run_restoration(self):
-        self.log("\n--- 🔄 Iniciando Restauração de Padrões do Windows ---")
+    def run_restoration(self, security_only=False):
+        self.log("\n--- 🔄 Iniciando Restauração do Sistema ---")
         
-        # 1. Restaurar todos os serviços mapeados
+        # Verificar se é Administrador
+        if not utils.is_admin():
+            self.log("❌ ERRO: Restauração requer privilégios de ADMINISTRADOR.", "error")
+            from tkinter import messagebox
+            messagebox.showerror("Erro de Permissão", "Para restaurar o sistema, o programa precisa ser executado como Administrador.")
+            return
+
+        # 1. Reativação Específica e Profunda do Windows Defender (PRIORIDADE MÁXIMA)
+        self.log("🛡️ Realizando Deep Reset do Windows Defender...", "info")
+        
+        # Comandos de Registro para remover bloqueios de GPO e resetar serviços de Kernel
+        deep_repair_cmds = [
+            # Remover Políticas de Grupo (GPO) e Bloqueios de Registro
+            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /f",
+            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /f",
+            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet\" /f",
+            "reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows Defender\" /v \"DisableAntiSpyware\" /f",
+            "reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows Defender\" /v \"DisableAntiVirus\" /f",
+            
+            # Resetar serviços via Registro (ignora restrições do Service Manager)
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WinDefend\" /v \"Start\" /t REG_DWORD /d 2 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdNisSvc\" /v \"Start\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Sense\" /v \"Start\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdFilter\" /v \"Start\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdBoot\" /v \"Start\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdNisDrv\" /v \"Start\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\SecurityHealthService\" /v \"Start\" /t REG_DWORD /d 2 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\wscsvc\" /v \"Start\" /t REG_DWORD /d 2 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mpssvc\" /v \"Start\" /t REG_DWORD /d 2 /f",
+            
+            # Resetar Interface do Windows Security (Resolve janela que não abre)
+            "Get-AppXPackage -AllUsers -Name Microsoft.SecHealthUI | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register \"$($_.InstallLocation)\\AppXManifest.xml\"}",
+            
+            # Reativar Monitoramento via PowerShell
+            "Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue",
+            "Set-MpPreference -DisableBehaviorMonitoring $false -ErrorAction SilentlyContinue"
+        ]
+
+        if not utils.DRY_RUN:
+            for cmd in deep_repair_cmds:
+                subprocess.run(["powershell", "-Command", cmd], capture_output=True, creationflags=0x08000000)
+            
+            # gpupdate em background
+            subprocess.Popen(["powershell", "-Command", "gpupdate /force"], creationflags=0x08000000)
+            
+            # Tentar iniciar serviços críticos
+            subprocess.run(["powershell", "-Command", "Start-Service WinDefend -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
+            subprocess.run(["powershell", "-Command", "Start-Service SecurityHealthService -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
+        else:
+            self.log("🧪 [SIMULAÇÃO]: Deep Reset do Defender executado.", "warning")
+
+        if security_only:
+            self.log("\n✅ DEFENDER RESTAURADO: As chaves de registro foram resetadas.", "success")
+            self.log("💡 Se o ícone não aparecer, REINICIE o computador.", "info")
+            self.status_val_lbl.configure(text="DEFENDER ATIVO", text_color="#10B981")
+            return
+
+        # 2. Restaurar outros serviços mapeados (Geral)
+        self.log("⚙️ Restaurando outros serviços do sistema...", "info")
         for category, items in SERVICES_MAP.items():
             for item in items:
                 if item["type"] == "service":
-                    start_service(item["id"], self.log)
+                    if not utils.DRY_RUN:
+                        try:
+                            utils.run_cmd(f"Set-Service -Name '{item['id']}' -StartupType Automatic")
+                        except: pass
         
-        # 2. Reativação Específica do Windows Defender (Correção UX)
-        self.log("🛡️ Reativando proteções do Windows Defender...", "info")
-        defender_cmds = [
-            "Set-MpPreference -DisableRealtimeMonitoring $false",
-            "Set-MpPreference -DisableBehaviorMonitoring $false",
-            "Set-MpPreference -DisableIOAVProtection $false",
-            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /v \"DisableAntiSpyware\" /f",
-            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /v \"DisableRealtimeMonitoring\" /f",
-            "net start WinDefend"
-        ]
+        self.log("🟢 Reiniciando Explorer.exe para aplicar mudanças visuais...")
         if not utils.DRY_RUN:
-            for cmd in defender_cmds:
-                subprocess.run(["powershell", "-Command", cmd], capture_output=True, creationflags=0x08000000)
-        
-        self.log("🟢 Reiniciando Explorer.exe...")
-        if utils.DRY_RUN:
-            self.log("[SIMULAÇÃO] Explorer reiniciado.")
-        else:
             utils.run_cmd("taskkill /f /im explorer.exe")
+            time.sleep(1)
             subprocess.Popen("explorer.exe")
             
         self.turn_off_levels()
-        self.log("\n✅ SISTEMA RESTAURADO: O Windows Defender e serviços essenciais foram reativados!", "success")
+        self.log("\n✅ SISTEMA RESTAURADO com sucesso!", "success")
         self.status_val_lbl.configure(text="SISTEMA RESTAURADO", text_color="#38BDF8")
+
 
     def light_up_level(self, lvl_num):
         if lvl_num in self.level_indicators:
