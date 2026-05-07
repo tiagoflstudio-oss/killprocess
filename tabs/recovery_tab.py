@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import threading
+import webbrowser
 from styles import C, get_fonts
 import utils
 
@@ -46,6 +47,41 @@ class RecoveryTab(ctk.CTkFrame):
             font=self.fonts["tab_btn"], height=35, command=self.load_points
         )
         self.refresh_btn.pack(side="left", padx=5, expand=True, fill="x")
+
+        # Reparo de Segurança (Destaque)
+        ctk.CTkLabel(actions_frame, text="☢️ REPARO CRÍTICO", font=self.fonts["small_bold"], text_color=C["red"]).pack(anchor="w", padx=15, pady=(10, 0))
+        
+        self.deep_fix_btn = ctk.CTkButton(
+            actions_frame, text="🛡️ RESTAURAR SEGURANÇA TOTAL (FIX IT ADMIN)", 
+            fg_color="#7F1D1D", hover_color="#991B1B", text_color="#FCA5A5",
+            font=self.fonts["tab_btn"], height=40, border_width=1, border_color="#F87171",
+            command=self.run_deep_security_fix
+        )
+        self.deep_fix_btn.pack(fill="x", padx=15, pady=(5, 15))
+
+        # Guia de Reparo para o Cliente
+        guide_frame = ctk.CTkFrame(self.container, fg_color="#0F172A", border_width=1, border_color="#1E293B", corner_radius=10)
+        guide_frame.pack(fill="x", pady=10)
+        
+        ctk.CTkLabel(guide_frame, text="📋 GUIA DE RECUPERAÇÃO PARA O CLIENTE", font=self.fonts["small_bold"], text_color="#94A3B8").pack(pady=(10, 5))
+        
+        steps = [
+            "1. Clique no botão vermelho 'RESTAURAR SEGURANÇA TOTAL' acima.",
+            "2. Clique no botão abaixo para baixar a ferramenta oficial da Microsoft.",
+            "3. Execute o arquivo baixado como Administrador (a tela piscará).",
+            "4. REINICIE o computador para finalizar o processo."
+        ]
+        
+        for step in steps:
+            ctk.CTkLabel(guide_frame, text=step, font=self.fonts["label_small"], text_color="#64748B", anchor="w").pack(fill="x", padx=20)
+
+        self.download_tool_btn = ctk.CTkButton(
+            guide_frame, text="📥 BAIXAR FERRAMENTA DE REPARO (MICROSOFT)", 
+            fg_color="#334155", hover_color="#475569",
+            font=self.fonts["small_bold"], height=32,
+            command=lambda: webbrowser.open("https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/defu/2024/02/securityhealthsetup_e16941e14861a6d24750ecdf05c548189b33182a.exe")
+        )
+        self.download_tool_btn.pack(pady=15, padx=20, fill="x")
 
         # Lista de Pontos
         self.list_frame = ctk.CTkScrollableFrame(self.container, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
@@ -123,3 +159,9 @@ class RecoveryTab(ctk.CTkFrame):
             cmd = f"Restore-Computer -RestorePoint {sequence_number} -Confirm:$false"
             threading.Thread(target=lambda: utils.run_cmd(cmd), daemon=True).start()
             self.app.log("🚀 Comando enviado. Aguarde o Windows processar a reinicialização.", "success")
+
+    def run_deep_security_fix(self):
+        from tkinter import messagebox
+        if messagebox.askyesno("Confirmar Reparo Crítico", "Deseja realizar o Reparo Profundo de Segurança?\n\nIsso removerá bloqueios de 'Administrador de TI' e restaurará o Windows Defender aos padrões de fábrica.\n\n⚠️ O PC poderá ficar lento por alguns segundos durante o reparo."):
+            self.app.log("☢️ Iniciando protocolo de Reparo Profundo de Segurança...", "warning")
+            threading.Thread(target=lambda: utils.deep_security_repair(self.app.log), daemon=True).start()

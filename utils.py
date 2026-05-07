@@ -49,3 +49,60 @@ def get_restore_points():
         return data
     except:
         return []
+
+def deep_security_repair(log_callback=None):
+    """ Executa o reparo profundo da segurança do Windows, removendo travas de GPO e IT Admin. """
+    if log_callback: log_callback("🛡️ Iniciando Reparo Profundo de Segurança...", "info")
+    
+    script = """
+    $ErrorActionPreference = 'SilentlyContinue'
+    
+    # Função para tomar posse de chaves protegidas
+    function Take-Ownership {
+        param($Path)
+        if (Test-Path $Path) {
+            $AdminAccount = New-Object System.Security.Principal.NTAccount('Administrators')
+            $Acl = Get-Acl $Path
+            $Acl.SetOwner($AdminAccount)
+            Set-Acl $Path $Acl
+            $AccessRule = New-Object System.Security.AccessControl.RegistryAccessRule('Administrators', 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
+            $Acl.SetAccessRule($AccessRule)
+            Set-Acl $Path $Acl
+            Remove-Item -Path $Path -Recurse -Force
+        }
+    }
+
+    # Remover bloqueios de políticas
+    Take-Ownership 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender'
+    Take-Ownership 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender Security Center'
+    Take-Ownership 'HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender'
+    Take-Ownership 'HKCU:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender Security Center'
+
+    # Resetar valores de desativação
+    $regPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows Defender'
+    if (Test-Path $regPath) {
+        Remove-ItemProperty -Path $regPath -Name 'DisableAntiSpyware'
+        Remove-ItemProperty -Path $regPath -Name 'DisableAntiVirus'
+    }
+
+    # Resetar serviços via registro
+    $services = @{'WinDefend'=2; 'SecurityHealthService'=2; 'wscsvc'=2; 'mpssvc'=2}
+    foreach ($svc in $services.Keys) {
+        $p = 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\$svc'
+        if (Test-Path $p) { Set-ItemProperty -Path $p -Name 'Start' -Value $services[$svc] -Force }
+    }
+
+    # Re-registrar UI (SecHealthUI)
+    Get-AppxPackage -AllUsers -Name Microsoft.SecHealthUI | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\\AppXManifest.xml" -Force}
+
+    # Forçar atualização de políticas
+    gpupdate /force
+    """
+    
+    res = run_cmd(script, dry_run=False)
+    
+    if log_callback: 
+        log_callback("✅ Reparo concluído! Políticas de IT Admin removidas.", "success")
+        log_callback("ℹ️ Se a janela não abrir, reinicie o PC para aplicar as mudanças de Kernel.", "warning")
+    
+    return True

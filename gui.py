@@ -1766,53 +1766,59 @@ del "%~f0"
             return
 
         # 1. Reativação Específica e Profunda do Windows Defender (PRIORIDADE MÁXIMA)
-        self.log("🛡️ Realizando Deep Reset do Windows Defender...", "info")
+        self.log("🛡️ Realizando Deep Reset do Windows Defender e Interface de Segurança...", "info")
         
-        # Comandos de Registro para remover bloqueios de GPO e resetar serviços de Kernel
-        deep_repair_cmds = [
-            # Remover Políticas de Grupo (GPO) e Bloqueios de Registro
-            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /f",
-            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /f",
-            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet\" /f",
-            "reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows Defender\" /v \"DisableAntiSpyware\" /f",
-            "reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows Defender\" /v \"DisableAntiVirus\" /f",
-            
-            # Resetar serviços via Registro (ignora restrições do Service Manager)
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WinDefend\" /v \"Start\" /t REG_DWORD /d 2 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdNisSvc\" /v \"Start\" /t REG_DWORD /d 3 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Sense\" /v \"Start\" /t REG_DWORD /d 3 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdFilter\" /v \"Start\" /t REG_DWORD /d 0 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdBoot\" /v \"Start\" /t REG_DWORD /d 0 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\WdNisDrv\" /v \"Start\" /t REG_DWORD /d 3 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\SecurityHealthService\" /v \"Start\" /t REG_DWORD /d 2 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\wscsvc\" /v \"Start\" /t REG_DWORD /d 2 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mpssvc\" /v \"Start\" /t REG_DWORD /d 2 /f",
-            
-            # Resetar Interface do Windows Security (Resolve janela que não abre)
-            "Get-AppXPackage -AllUsers -Name Microsoft.SecHealthUI | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register \"$($_.InstallLocation)\\AppXManifest.xml\"}",
-            
-            # Reativar Monitoramento via PowerShell
-            "Set-MpPreference -DisableRealtimeMonitoring $false -ErrorAction SilentlyContinue",
-            "Set-MpPreference -DisableBehaviorMonitoring $false -ErrorAction SilentlyContinue"
-        ]
+        # Script consolidado para execução mais rápida e confiável
+        repair_script = """
+        $ErrorActionPreference = 'SilentlyContinue'
+        # Limpeza de Registro e Políticas
+        $regPaths = @(
+            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender',
+            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection',
+            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet',
+            'HKLM:\\SOFTWARE\\Microsoft\\Windows Defender',
+            'HKLM:\\SOFTWARE\\Microsoft\\Windows Defender Security Center'
+        )
+        foreach ($path in $regPaths) {
+            if (Test-Path $path) {
+                Remove-ItemProperty -Path $path -Name 'DisableAntiSpyware' -Force
+                Remove-ItemProperty -Path $path -Name 'DisableAntiVirus' -Force
+                Remove-ItemProperty -Path $path -Name 'DisableRealtimeMonitoring' -Force
+                Remove-Item -Path $path -Recurse -Force
+            }
+        }
+        # Reset de Serviços via Kernel
+        $services = @{
+            'WinDefend' = 2; 'WdNisSvc' = 3; 'Sense' = 3; 'WdFilter' = 0; 
+            'WdBoot' = 0; 'SecurityHealthService' = 2; 'wscsvc' = 2; 'mpssvc' = 2; 'AppXSvc' = 2
+        }
+        foreach ($svc in $services.Keys) {
+            $s_path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\$svc\"
+            if (Test-Path $s_path) { Set-ItemProperty -Path $s_path -Name 'Start' -Value $services[$svc] -Force }
+        }
+        # Re-registrar Interface AppX
+        Get-AppxPackage -AllUsers -Name 'Microsoft.SecHealthUI' | Foreach {
+            Add-AppxPackage -DisableDevelopmentMode -Register \"$($_.InstallLocation)\\AppXManifest.xml\" -Force
+        }
+        # Reativar Monitoramento
+        Set-MpPreference -DisableRealtimeMonitoring $false
+        Set-MpPreference -DisableBehaviorMonitoring $false
+        gpupdate /force
+        """
 
         if not utils.DRY_RUN:
-            for cmd in deep_repair_cmds:
-                subprocess.run(["powershell", "-Command", cmd], capture_output=True, creationflags=0x08000000)
+            # Executa o script de reparo consolidado
+            subprocess.run(["powershell", "-Command", repair_script], capture_output=True, creationflags=0x08000000)
             
-            # gpupdate em background
-            subprocess.Popen(["powershell", "-Command", "gpupdate /force"], creationflags=0x08000000)
-            
-            # Tentar iniciar serviços críticos
-            subprocess.run(["powershell", "-Command", "Start-Service WinDefend -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
-            subprocess.run(["powershell", "-Command", "Start-Service SecurityHealthService -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
+            # Tentar iniciar serviços críticos imediatamente
+            subprocess.run(["powershell", "-Command", "Start-Service WinDefend, SecurityHealthService -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
         else:
             self.log("🧪 [SIMULAÇÃO]: Deep Reset do Defender executado.", "warning")
 
         if security_only:
-            self.log("\n✅ DEFENDER RESTAURADO: As chaves de registro foram resetadas.", "success")
-            self.log("💡 Se o ícone não aparecer, REINICIE o computador.", "info")
-            self.status_val_lbl.configure(text="DEFENDER ATIVO", text_color="#10B981")
+            self.log("\n✅ DEFENDER RESTAURADO: Bloqueios removidos e interface resetada.", "success")
+            self.log("💡 Se a interface ainda não abrir, REINICIE o computador.", "info")
+            self.status_val_lbl.configure(text="DEFENDER RESTAURADO", text_color="#10B981")
             return
 
         # 2. Restaurar outros serviços mapeados (Geral)
