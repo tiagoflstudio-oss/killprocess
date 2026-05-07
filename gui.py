@@ -493,12 +493,20 @@ class PremiumKillprocessApp(ctk.CTk):
         hdr.pack(fill="x")
         
         ctk.CTkLabel(hdr, text="⚡ MONITOR DE EXECUÇÃO", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["accent"]).pack(side="left", padx=15)
+        
+        # Barra de Download (Invisível por padrão)
+        self.download_bar = ctk.CTkProgressBar(hdr, width=200, height=8, corner_radius=4, 
+                                               fg_color="#1E2631", progress_color="#00CCFF")
+        self.download_bar.set(0)
+        
+        self.download_lbl = ctk.CTkLabel(hdr, text="DOWNLOAD: 0%", font=ctk.CTkFont("Segoe UI", 9, "bold"), text_color="#00CCFF")
+        
         self.pending_clear = False
         # Botão LIMPAR maior e mais centralizado no header do terminal
         self.clear_log_btn = ctk.CTkButton(hdr, text="LIMPAR LOG", width=90, height=26, font=ctk.CTkFont("Segoe UI", 9, "bold"), 
-                      fg_color="#1E293B", hover_color="#334155", text_color=C["muted"],
+                      fg_color="#1E2631", hover_color="#334155", text_color=C["muted"],
                       command=self.clear_terminal_logs)
-        self.clear_log_btn.pack(side="right", padx=120)
+        self.clear_log_btn.pack(side="right", padx=20)
         
         self.log_textbox = ctk.CTkTextbox(self.terminal_frame, fg_color="transparent", font=ctk.CTkFont("Consolas", 10), text_color=C["text"])
         self.log_textbox.pack(fill="both", expand=True, padx=5, pady=5)
@@ -990,6 +998,9 @@ class PremiumKillprocessApp(ctk.CTk):
                 
                 self.log("🚀 [Update System]: CONECTANDO AO SERVIDOR...", "info")
                 
+                # Mostrar barra de progresso no UI
+                self.after(0, lambda: self.show_download_ui(True))
+                
                 with urllib.request.urlopen(req, timeout=30) as response:
                     total_size = int(response.info().get('Content-Length', 0))
                     downloaded = 0
@@ -1003,16 +1014,17 @@ class PremiumKillprocessApp(ctk.CTk):
                             downloaded += len(buffer)
                             f.write(buffer)
                             
-                            # Log de progresso a cada 1MB ou no final
+                            # Atualizar progresso na UI
                             if total_size > 0:
-                                percent = int(downloaded * 100 / total_size)
-                                if percent % 25 == 0: # Logar a cada 25%
-                                    self.log(f"🚀 [Update System]: DOWNLOAD {percent}% ({downloaded // 1024} KB)", "info")
+                                percent = downloaded / total_size
+                                self.after(0, lambda p=percent: self.update_download_progress(p))
                             else:
+                                # Se não tiver tamanho total, simular pulsação ou logar bytes
                                 if downloaded % (1024 * 1024) == 0:
                                     self.log(f"🚀 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
 
                 self.log("🚀 [Update System]: DOWNLOAD CONCLUÍDO. PREPARANDO SUBSTITUIÇÃO...", "success")
+                self.after(0, lambda: self.show_download_ui(False))
 
                 # 2. Criar o script de substituição (Batch)
                 current_exe = sys.executable
@@ -1052,9 +1064,24 @@ del "%~f0"
                 sys.exit()
 
             except Exception as e:
+                self.after(0, lambda: self.show_download_ui(False))
                 self.log(f"⚠️ [Update System]: ERRO NO DOWNLOAD: {e}", "error")
                 if "404" in str(e):
                     self.log("⚠️ Verifique se a Release 'latest' foi publicada no GitHub.", "warning")
+
+    def show_download_ui(self, show=True):
+        if show:
+            self.download_bar.pack(side="left", padx=(10, 5))
+            self.download_lbl.pack(side="left")
+            self.clear_log_btn.pack_forget() # Ocultar limpar log para dar espaço
+        else:
+            self.download_bar.pack_forget()
+            self.download_lbl.pack_forget()
+            self.clear_log_btn.pack(side="right", padx=20)
+
+    def update_download_progress(self, percent):
+        self.download_bar.set(percent)
+        self.download_lbl.configure(text=f"DOWNLOAD: {int(percent*100)}%")
 
 
     def add_custom_shortcut(self):
