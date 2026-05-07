@@ -380,6 +380,25 @@ class PremiumKillprocessApp(ctk.CTk):
         self.dry_run_switch.pack(side="left", padx=5)
         self.dry_run_switch.deselect()
 
+        # --- MENU SUSPENSO (ESTILO VS CODE) ---
+        self.menu_container = ctk.CTkFrame(left_container, fg_color="transparent")
+        self.menu_container.pack(side="left", padx=(40, 0))
+
+        def create_dropdown(label, values):
+            menu = ctk.CTkOptionMenu(self.menu_container, values=[label] + values,
+                                     command=lambda v, l=label: self.handle_top_menu(l, v),
+                                     width=100, height=28, corner_radius=6,
+                                     font=ctk.CTkFont("Segoe UI", 10, "bold"),
+                                     fg_color="transparent", button_color="transparent",
+                                     button_hover_color=C["hover"], text_color="#E2E8F0")
+            menu.set(label)
+            menu.pack(side="left", padx=2)
+            return menu
+
+        self.sys_menu = create_dropdown("SISTEMA", ["Gerenciador", "Controle", "Ponto Restauro", "Info PC"])
+        self.tool_menu = create_dropdown("FERRAMENTAS", ["Flush DNS", "Resetar IP", "Limpar Temp", "Shell Mode"])
+        self.help_menu = create_dropdown("SUPORTE", ["Documentação", "Mestre Clientes", "Sobre"])
+
         # Central Audit Container (Inicia vazio)
         self.audit_top_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
         self.audit_top_container.pack(side="left", fill="both", expand=True, padx=20)
@@ -413,6 +432,36 @@ class PremiumKillprocessApp(ctk.CTk):
         self.res_menu.pack(side="right", padx=10, pady=5)
         self.res_menu.set("1650 x 1080 (Padrão Apex)")
 
+
+    def handle_top_menu(self, category, choice):
+        if choice == category: return # Ignorar clique no label pai
+        
+        self.log(f"⚡ [Menu {category}]: ACIONANDO {choice.upper()}...", "info")
+        
+        # Dispatcher de ações
+        if category == "SISTEMA":
+            if choice == "Gerenciador": subprocess.Popen("taskmgr.exe")
+            elif choice == "Controle": subprocess.Popen("control.exe")
+            elif choice == "Ponto Restauro": self.create_restore_point()
+            elif choice == "Info PC": subprocess.Popen("msinfo32.exe")
+        
+        elif category == "FERRAMENTAS":
+            if choice == "Flush DNS": self.run_extra_optimization("flush_dns")
+            elif choice == "Resetar IP": utils.run_cmd("ipconfig /release; ipconfig /renew")
+            elif choice == "Limpar Temp": self.run_extra_optimization("clean_temp")
+            elif choice == "Shell Mode": self.switch_tab("shell")
+            
+        elif category == "SUPORTE":
+            if choice == "Documentação": self.log("ℹ️ Abrindo documentação no GitHub...", "info")
+            elif choice == "Mestre Clientes": self.log("ℹ️ Conectando ao suporte Mestre Clientes...", "info")
+            elif choice == "Sobre": 
+                from tkinter import messagebox
+                messagebox.showinfo("Sobre Flux OS", f"FLUX OS - Sapphire Edition\nVersão: {utils.VERSION}\nDesenvolvido por: Tiago FL Studio\n\nTodos os direitos reservados.")
+
+        # Resetar o label do menu após a seleção
+        if category == "SISTEMA": self.sys_menu.set("SISTEMA")
+        elif category == "FERRAMENTAS": self.tool_menu.set("FERRAMENTAS")
+        elif category == "SUPORTE": self.help_menu.set("SUPORTE")
 
     def change_resolution(self, choice):
         w, h = self.resolutions[choice]
