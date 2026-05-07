@@ -3,7 +3,7 @@ import re
 import os
 
 def sync():
-    print("🔄 Sincronizando versões...")
+    print("Sincronizando versões...")
     
     # 1. Ler versão do utils.py
     version = "0.0.0"
@@ -32,8 +32,8 @@ def sync():
     with open("version.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ version.json atualizado para v{version}")
-    print(f"🔗 URL de Download: {data['url']}")
+    print(f"OK: version.json atualizado para v{version}")
+    print(f"URL de Download: {data['url']}")
 
 if __name__ == "__main__":
     sync()
