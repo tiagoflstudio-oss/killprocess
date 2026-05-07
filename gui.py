@@ -1044,49 +1044,51 @@ class PremiumKillprocessApp(ctk.CTk):
                     self.log("⚠️ [Update System]: URL DE DOWNLOAD NÃO CONFIGURADA NO MANIFESTO.", "warning")
                     return
 
-                temp_exe = "flux_os_update_temp.exe"
+                # 1. Definir caminho seguro na pasta TEMP do Windows
+                import tempfile
+                temp_dir = tempfile.gettempdir()
+                temp_exe = os.path.join(temp_dir, "flux_os_update_temp.exe")
                 
-                # Headers para evitar bloqueio por falta de User-Agent
-                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-                req = urllib.request.Request(download_url, headers=headers)
+                self.log(f"📁 [Update System]: PREPARANDO ARQUIVO EM {temp_exe}...", "info")
                 
-                self.log("🚀 [Update System]: CONECTANDO AO SERVIDOR...", "info")
-                
-                # Mostrar barra de progresso no UI
-                self.after(0, lambda: self.show_download_ui(True))
+                # Headers para evitar bloqueio do GitHub
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
                 
                 try:
+                    self.log("🚀 [Update System]: CONECTANDO AO GITHUB...", "info")
+                    req = urllib.request.Request(download_url, headers=headers)
+                    
+                    # Mostrar barra de progresso
+                    self.after(0, lambda: self.show_download_ui(True))
+                    
+                    self.log("📡 [Update System]: AGUARDANDO RESPOSTA DO SERVIDOR...", "info")
                     response = urllib.request.urlopen(req, timeout=30)
-                    total_size = int(response.info().get('Content-Length', 0))
                     
-                    self.log(f"🚀 [Update System]: SERVIDOR RESPONDEU. TAMANHO: {total_size // 1024 if total_size > 0 else '???'} KB", "info")
-                    
-                    if total_size == 0:
-                        self.log("⚠️ [Update System]: O servidor retornou um arquivo vazio. Verifique se o release no GitHub foi concluído.", "warning")
+                    info = response.info()
+                    total_size = int(info.get('Content-Length', 0))
+                    self.log(f"✅ [Update System]: CONEXÃO ESTABELECIDA. TAMANHO: {total_size // 1024 if total_size > 0 else '???'} KB", "success")
                     
                     downloaded = 0
-                    block_size = 16384
+                    block_size = 65536 # Bloco maior para performance
                     
                     with open(temp_exe, "wb") as f:
                         while True:
-                            # Adicionando um pequeno timeout de leitura
                             buffer = response.read(block_size)
                             if not buffer:
                                 break
-                            downloaded += len(buffer)
                             f.write(buffer)
+                            downloaded += len(buffer)
                             
-                            # Atualizar progresso na UI
                             if total_size > 0:
                                 percent = downloaded / total_size
                                 self.after(0, lambda p=percent: self.update_download_progress(p))
                             
-                            if downloaded % (1024 * 1024) == 0: # Log a cada 1MB
-                                self.log(f"📦 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
+                            if downloaded % (1024 * 1024 * 2) == 0: # Log a cada 2MB
+                                self.log(f"📦 [Update System]: BAIXADOS {downloaded // 1024 // 1024} MB...", "info")
                     
                     response.close()
                 except Exception as e:
-                    self.log(f"❌ [Update System]: ERRO DURANTE O DOWNLOAD: {e}", "error")
+                    self.log(f"❌ [Update System]: FALHA NO PROCESSO: {e}", "error")
                     self.after(0, lambda: self.show_download_ui(False))
                     return
 

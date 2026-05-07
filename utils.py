@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-VERSION = "2.1.35" # Versão Atual (Sapphire Edition)
+VERSION = "2.1.36" # Versão Atual (Sapphire Edition)
 DRY_RUN = False # Modo Real para Release
 UPDATE_URL = "https://raw.githubusercontent.com/tiagoflstudio-oss/Flux_OS/main/version.json"
 

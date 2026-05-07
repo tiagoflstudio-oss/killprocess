@@ -1,5 +1,5 @@
 {
-  "version": "2.1.35",
+  "version": "2.1.36",
   "release_notes": "FLUX OS v2.1.28 SAPPHIRE - Auditoria Sênior concluída. Refatoração Thread-Safe, telemetria real de hardware (RAM em GB, Mb/s), Cockpit Panorâmico 100% e correção estrutural do vácuo horizontal.",
   "date": "2026-05-06",
   "url": "https://github.com/tiagoflstudio-oss/Flux_OS/releases/latest/download/Flux_OS_Sapphire.exe",
