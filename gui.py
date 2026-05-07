@@ -991,8 +991,9 @@ class PremiumKillprocessApp(ctk.CTk):
     def check_for_updates(self):
         self.log("🌐 [Update System]: CONSULTANDO SERVIDOR...", "info")
         
-        # URL RAW DO SEU MANIFESTO NO GITHUB
-        MANIFEST_URL = utils.UPDATE_URL
+        # URL RAW DO SEU MANIFESTO NO GITHUB (Com bypass de cache)
+        import time
+        MANIFEST_URL = utils.UPDATE_URL + f"?t={int(time.time())}"
 
         def run_check():
             import urllib.request
