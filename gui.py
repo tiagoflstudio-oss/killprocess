@@ -1461,12 +1461,12 @@ del "%~f0"
                 gpu_p = 0
                 try:
                     # Tentar Nvidia primeiro
-                    gpu_out = subprocess.check_output(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"], text=True)
+                    gpu_out = subprocess.check_output(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"], text=True, creationflags=0x08000000)
                     gpu_p = int(gpu_out.strip())
                 except:
                     try:
                         # Tentar WMI (Genérico Windows)
-                        gpu_out = subprocess.check_output(["powershell", "-Command", "Get-Counter '\\GPU Engine(*)\\Utilization Percentage' | Select-Object -ExpandProperty CounterSamples | Select-Object -ExpandProperty CookedValue | Measure-Object -Average | Select-Object -ExpandProperty Average"], text=True)
+                        gpu_out = subprocess.check_output(["powershell", "-Command", "Get-Counter '\\GPU Engine(*)\\Utilization Percentage' | Select-Object -ExpandProperty CounterSamples | Select-Object -ExpandProperty CookedValue | Measure-Object -Average | Select-Object -ExpandProperty Average"], text=True, creationflags=0x08000000)
                         gpu_p = int(float(gpu_out.strip()))
                     except:
                         gpu_p = random.randint(5, 15) # Mínimo fallback se falhar tudo
@@ -1502,7 +1502,7 @@ del "%~f0"
                 # ── TELEMETRIA AVANÇADA GPU (Se a aba estiver visível) ──
                 if "gpu" in self.tabs and self.tabs["gpu"].winfo_viewable():
                     try:
-                        gpu_info = subprocess.check_output(["nvidia-smi", "--query-gpu=power.draw,clocks.current.graphics,temperature.gpu", "--format=csv,noheader,nounits"], text=True)
+                        gpu_info = subprocess.check_output(["nvidia-smi", "--query-gpu=power.draw,clocks.current.graphics,temperature.gpu", "--format=csv,noheader,nounits"], text=True, creationflags=0x08000000)
                         p_val, c_val, t_val = gpu_info.strip().split(", ")
                         if hasattr(self, "gpu_pwr"): self.gpu_pwr.configure(text=f"{p_val}W")
                         if hasattr(self, "gpu_clk"): self.gpu_clk.configure(text=f"{c_val}MHz")
@@ -1678,15 +1678,15 @@ del "%~f0"
 
     def shell_volume_up(self):
         self.log("🔊 Volume +")
-        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]175)"], capture_output=True)
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]175)"], capture_output=True, creationflags=0x08000000)
 
     def shell_volume_down(self):
         self.log("🔉 Volume -")
-        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]174)"], capture_output=True)
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]174)"], capture_output=True, creationflags=0x08000000)
 
     def shell_volume_mute(self):
         self.log("🔇 Mute")
-        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"], capture_output=True)
+        subprocess.run(["powershell", "-Command", "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"], capture_output=True, creationflags=0x08000000)
 
     def toggle_gold_mode_explorer(self):
         self.shell_explorer_closed = not self.shell_explorer_closed
