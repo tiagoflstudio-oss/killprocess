@@ -1056,16 +1056,20 @@ class PremiumKillprocessApp(ctk.CTk):
                 self.after(0, lambda: self.show_download_ui(True))
                 
                 try:
-                    response = urllib.request.urlopen(req, timeout=45)
+                    response = urllib.request.urlopen(req, timeout=30)
                     total_size = int(response.info().get('Content-Length', 0))
                     
                     self.log(f"🚀 [Update System]: SERVIDOR RESPONDEU. TAMANHO: {total_size // 1024 if total_size > 0 else '???'} KB", "info")
                     
+                    if total_size == 0:
+                        self.log("⚠️ [Update System]: O servidor retornou um arquivo vazio. Verifique se o release no GitHub foi concluído.", "warning")
+                    
                     downloaded = 0
-                    block_size = 16384 # Buffer maior para velocidade
+                    block_size = 16384
                     
                     with open(temp_exe, "wb") as f:
                         while True:
+                            # Adicionando um pequeno timeout de leitura
                             buffer = response.read(block_size)
                             if not buffer:
                                 break
@@ -1077,7 +1081,7 @@ class PremiumKillprocessApp(ctk.CTk):
                                 percent = downloaded / total_size
                                 self.after(0, lambda p=percent: self.update_download_progress(p))
                             
-                            if downloaded % (1024 * 512) == 0: # Log a cada 512KB
+                            if downloaded % (1024 * 1024) == 0: # Log a cada 1MB
                                 self.log(f"📦 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
                     
                     response.close()
