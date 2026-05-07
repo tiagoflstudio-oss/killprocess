@@ -169,9 +169,15 @@ class DashboardTab(ctk.CTkScrollableFrame):
             command=self.app.toggle_gold_mode_explorer)
         self.app.btn_shell_dash.grid(row=0, column=2, padx=3, sticky="nsew")
 
+        self.restore_security_btn = ctk.CTkButton(
+            act, text="🛡️  REATIVAR WINDOWS DEFENDER", fg_color="#1E1B4B", hover_color="#3730A3",
+            border_width=1, border_color="#4338CA", font=self.fonts["small_bold"], height=35, corner_radius=6,
+            text_color="#E2E8F0", command=self.app.start_restoration)
+        self.restore_security_btn.pack(fill="x", padx=14, pady=(2, 5))
+
         self.app.restore_btn = ctk.CTkButton(
-            act, text="🔄  RESTAURAR PADRÕES DO WINDOWS", fg_color="#0F172A", hover_color="#EF4444",
-            border_width=1, border_color="#1E293B", font=self.fonts["small_bold"], height=30, corner_radius=6,
+            act, text="🔄  RESTAURAR TODOS OS PADRÕES DO SISTEMA", fg_color="#0F172A", hover_color="#EF4444",
+            border_width=1, border_color="#1E293B", font=self.fonts["small_bold"], height=35, corner_radius=6,
             text_color=C["muted"], command=self.app.start_restoration)
         self.app.restore_btn.pack(fill="x", padx=14, pady=(2, 10))
 

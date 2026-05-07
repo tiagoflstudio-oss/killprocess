@@ -339,6 +339,13 @@ class PremiumKillprocessApp(ctk.CTk):
 
         logo_lbl = ctk.CTkLabel(left_container, text="✨ FLUX OS ", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["accent"])
         logo_lbl.pack(side="left")
+        
+        self.back_btn = ctk.CTkButton(left_container, text="⬅ VOLTAR", width=80, height=24, corner_radius=6,
+                                      fg_color="transparent", border_width=1, border_color=C["border"],
+                                      hover_color=C["hover"], font=("Segoe UI", 10, "bold"),
+                                      command=lambda: self.switch_tab("dashboard"))
+        self.back_btn.pack(side="left", padx=15)
+
         sub_lbl = ctk.CTkLabel(left_container, text="APEX", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["muted"])
         sub_lbl.pack(side="left", padx=(0, 20), pady=(4,0))
         
@@ -1625,20 +1632,36 @@ del "%~f0"
     def run_restoration(self):
         self.log("\n--- 🔄 Iniciando Restauração de Padrões do Windows ---")
         
+        # 1. Restaurar todos os serviços mapeados
         for category, items in SERVICES_MAP.items():
             for item in items:
                 if item["type"] == "service":
                     start_service(item["id"], self.log)
-                    
+        
+        # 2. Reativação Específica do Windows Defender (Correção UX)
+        self.log("🛡️ Reativando proteções do Windows Defender...", "info")
+        defender_cmds = [
+            "Set-MpPreference -DisableRealtimeMonitoring $false",
+            "Set-MpPreference -DisableBehaviorMonitoring $false",
+            "Set-MpPreference -DisableIOAVProtection $false",
+            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /v \"DisableAntiSpyware\" /f",
+            "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /v \"DisableRealtimeMonitoring\" /f",
+            "net start WinDefend"
+        ]
+        if not utils.DRY_RUN:
+            for cmd in defender_cmds:
+                subprocess.run(["powershell", "-Command", cmd], capture_output=True, creationflags=0x08000000)
+        
         self.log("🟢 Reiniciando Explorer.exe...")
         if utils.DRY_RUN:
             self.log("[SIMULAÇÃO] Explorer reiniciado.")
         else:
-            utils.run_cmd("explorer.exe")
+            utils.run_cmd("taskkill /f /im explorer.exe")
+            subprocess.Popen("explorer.exe")
             
         self.turn_off_levels()
-        self.log("\n✅ Todos os padrões do Windows foram restaurados!")
-        self.status_val_lbl.configure(text="Pronto para Jogar", text_color="#F8FAFC")
+        self.log("\n✅ SISTEMA RESTAURADO: O Windows Defender e serviços essenciais foram reativados!", "success")
+        self.status_val_lbl.configure(text="SISTEMA RESTAURADO", text_color="#38BDF8")
 
     def light_up_level(self, lvl_num):
         if lvl_num in self.level_indicators:
