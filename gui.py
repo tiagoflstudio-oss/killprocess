@@ -977,13 +977,41 @@ class PremiumKillprocessApp(ctk.CTk):
                 import os
                 import sys
 
-                # 1. Baixar o novo executável (simulado se a URL for #)
+                # 1. Baixar o novo executável
                 if download_url == "#":
                     self.log("⚠️ [Update System]: URL DE DOWNLOAD NÃO CONFIGURADA NO MANIFESTO.", "warning")
                     return
 
                 temp_exe = "flux_os_update_temp.exe"
-                urllib.request.urlretrieve(download_url, temp_exe)
+                
+                # Headers para evitar bloqueio por falta de User-Agent
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                req = urllib.request.Request(download_url, headers=headers)
+                
+                self.log("🚀 [Update System]: CONECTANDO AO SERVIDOR...", "info")
+                
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    total_size = int(response.info().get('Content-Length', 0))
+                    downloaded = 0
+                    block_size = 8192
+                    
+                    with open(temp_exe, "wb") as f:
+                        while True:
+                            buffer = response.read(block_size)
+                            if not buffer:
+                                break
+                            downloaded += len(buffer)
+                            f.write(buffer)
+                            
+                            # Log de progresso a cada 1MB ou no final
+                            if total_size > 0:
+                                percent = int(downloaded * 100 / total_size)
+                                if percent % 25 == 0: # Logar a cada 25%
+                                    self.log(f"🚀 [Update System]: DOWNLOAD {percent}% ({downloaded // 1024} KB)", "info")
+                            else:
+                                if downloaded % (1024 * 1024) == 0:
+                                    self.log(f"🚀 [Update System]: BAIXADOS {downloaded // 1024} KB...", "info")
+
                 self.log("🚀 [Update System]: DOWNLOAD CONCLUÍDO. PREPARANDO SUBSTITUIÇÃO...", "success")
 
                 # 2. Criar o script de substituição (Batch)
@@ -1024,8 +1052,9 @@ del "%~f0"
                 sys.exit()
 
             except Exception as e:
-                self.log(f"⚠️ [Update System]: ERRO AO BAIXAR DE {download_url}", "error")
-                self.log(f"⚠️ Detalhe do Erro: {e}", "error")
+                self.log(f"⚠️ [Update System]: ERRO NO DOWNLOAD: {e}", "error")
+                if "404" in str(e):
+                    self.log("⚠️ Verifique se a Release 'latest' foi publicada no GitHub.", "warning")
 
 
     def add_custom_shortcut(self):
