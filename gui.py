@@ -15,20 +15,13 @@ import pystray
 from pystray import MenuItem as item
 import random
 import winsound
+import ctypes
+import os
 
-# =====================================================================
-# 🛡️ TRAVA DE ADMINISTRADOR (AUTO-ELEVATION)
-# =====================================================================
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
+import boot_engine
 
-if not is_admin():
-    # Re-executa o script com privilégios de administrador
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    sys.exit()
+# --- ELEVAÇÃO DE PRIVILÉGIOS (ESTÁVEL / MODULARIZADO) ---
+boot_engine.check_admin_elevation()
 
 # =====================================================================
 
@@ -73,43 +66,62 @@ class PremiumKillprocessApp(ctk.CTk):
         splash.attributes("-topmost", True)
         
         w, h = 600, 400
-        # Centralizar na tela
-        screen_w = self.winfo_screenwidth()
-        screen_h = self.winfo_screenheight()
-        x = (screen_w - w) // 2
-        y = (screen_h - h) // 2
+        sw = splash.winfo_screenwidth()
+        sh = splash.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
         splash.geometry(f"{w}x{h}+{x}+{y}")
         splash.configure(fg_color="#080B0F")
         
         canvas = ctk.CTkCanvas(splash, width=w, height=h, bg="#080B0F", highlightthickness=0)
         canvas.pack(fill="both", expand=True)
         
+        # FAIL-SAFE: Forçar fechamento em 5 segundos se algo travar
+        splash.after(5000, lambda: [splash.destroy() if splash.winfo_exists() else None, self.show_login_gate()])
+        
         import winsound, threading
         
-        def play_boot_sound(freq, dur):
-            threading.Thread(target=lambda: winsound.Beep(freq, dur), daemon=True).start()
+        def play_boot_sound():
+            def whoosh():
+                for f in range(400, 1000, 40):
+                    winsound.Beep(f, 15)
+                for f in range(1000, 200, -20):
+                    winsound.Beep(f, 10)
+            threading.Thread(target=whoosh, daemon=True).start()
 
         def animate_flux_logo(step=0):
+            if not splash.winfo_exists(): return
+            
+            # Capturar dimensões REAIS do canvas para centralização matemática perfeita
+            cw = canvas.winfo_width()
+            ch = canvas.winfo_height()
+            
+            # Fallback caso o Windows ainda não tenha renderizado o canvas (evita cx=0)
+            if cw < 10: cw, ch = 600, 400
+            
+            cx, cy = cw // 2, ch // 2
             canvas.delete("all")
-            win_w, win_h = 600, 400
-            cx, cy = win_w // 2, win_h // 2
+            
+            # Borda neon sutil (proporcional ao tamanho real)
+            margin_w, margin_h = cw * 0.15, ch * 0.25
+            canvas.create_rectangle(margin_w, margin_h, cw - margin_w, ch - margin_h, 
+                                   outline="#1E2631", width=1)
             
             full_text = "FLUX OS"
-            # Calcular quantas letras mostrar com base no step (30 steps total)
-            chars_to_show = int((step / 30) * len(full_text)) + 1
+            # Velocidade da animação de digitação ajustada
+            progress = min(1.0, step / 30)
+            chars_to_show = int(progress * len(full_text)) + 1
             current_text = full_text[:min(chars_to_show, len(full_text))]
             
-            # Efeito de Brilho (Glow) Prateado
-            glow_color = "#94A3B8" # Prata suave para o brilho
-            silver_color = "#F8FAFC" # Prata brilhante principal
+            main_font = ("Segoe UI Black", 52)
             
-            # Camada de Brilho (Levemente deslocada/maior)
-            canvas.create_text(cx, cy, text=current_text, font=("Segoe UI Light", 48, "bold"), 
-                               fill=glow_color, anchor="center")
+            # Camada de Brilho (Glow)
+            canvas.create_text(cx, cy, text=current_text, font=main_font, 
+                               fill="#94A3B8", anchor="center")
             
-            # Camada Principal (Prata Brilhante)
-            canvas.create_text(cx - 2, cy - 2, text=current_text, font=("Segoe UI Light", 48, "bold"), 
-                               fill=silver_color, anchor="center")
+            # Camada Principal (Offset para efeito 3D sutil)
+            canvas.create_text(cx - 2, cy - 2, text=current_text, font=main_font, 
+                               fill="#F8FAFC", anchor="center")
 
             # Partículas de "Faísca" prateadas
             if step % 2 == 0:
@@ -123,58 +135,99 @@ class PremiumKillprocessApp(ctk.CTk):
                 canvas.create_text(cx, cy + 80, text="S Y S T E M   L O A D E D", 
                                    font=("Consolas", 9, "bold"), fill="#64748B", anchor="center")
 
-            if step < 35: # Um pouco mais de tempo para ler
+            if step < 35: 
                 splash.after(85, lambda: animate_flux_logo(step + 1))
             else:
-                splash.after(800, lambda: [splash.destroy(), self.show_login_gate()])
-
-        splash.update()
-        animate_flux_logo()
+                def finalize_splash():
+                    try:
+                        if splash.winfo_exists(): splash.destroy()
+                    except: pass
+                    self.show_login_gate()
+                splash.after(800, finalize_splash)
+        
+        try:
+            splash.update()
+            play_boot_sound()
+            # Pequeno delay para o Windows terminar de posicionar o canvas
+            splash.after(100, animate_flux_logo)
+        except Exception as e:
+            print(f"Erro ao iniciar Splash: {e}")
+            if splash.winfo_exists(): splash.destroy()
+            self.show_login_gate()
+            self.show_login_gate()
 
     def show_login_gate(self):
         # Verificar se já está ativado
         if os.path.exists("license.bin"):
+            self.state('zoomed')
             self.deiconify()
+            self.lift()
+            self.focus_force()
             return
 
         gate = ctk.CTkToplevel(self)
         gate.title("FLUX OS VIP ACCESS")
         gate.attributes("-topmost", True)
         
-        # Centralizar
-        w, h = 450, 280
-        sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
+        # Centralizar Dinâmico
+        w, h = 450, 300
+        gate.update_idletasks()
+        sw = gate.winfo_screenwidth()
+        sh = gate.winfo_screenheight()
         gate.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
         gate.overrideredirect(False)
         gate.configure(fg_color=C["bg"])
+        gate.lift()
+        gate.focus_force()
 
         # Border Glow
         frame = ctk.CTkFrame(gate, fg_color=C["card"], border_width=1, border_color=C["cyan"], corner_radius=15)
         frame.pack(fill="both", expand=True, padx=2, pady=2)
 
-        ctk.CTkLabel(frame, text="🛡️ VIP ACCESS REQUIRED", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["cyan"]).pack(pady=(25, 5))
-        ctk.CTkLabel(frame, text="INSIRA SUA CHAVE VIP (16 DÍGITOS)", font=ctk.CTkFont("Segoe UI", 13, "bold"), text_color=C["text"]).pack(pady=5)
+        # --- HWID Display (NOVO) ---
+        my_hwid = utils.get_hwid()
+        hwid_frame = ctk.CTkFrame(frame, fg_color="#0D1117", height=30, corner_radius=6)
+        hwid_frame.pack(fill="x", padx=40, pady=(10, 0))
+        
+        ctk.CTkLabel(hwid_frame, text=f"DEVICE ID: {my_hwid}", font=("Consolas", 9), text_color="#64748B").pack(side="left", padx=10)
+        
+        def copy_hwid():
+            self.clipboard_clear()
+            self.clipboard_append(my_hwid)
+            self.log("📋 HWID copiado para a área de transferência.")
+
+        ctk.CTkButton(hwid_frame, text="COPIAR", width=50, height=20, fg_color="#1E2631", hover_color=C["hover"],
+                      font=("Segoe UI", 8, "bold"), command=copy_hwid).pack(side="right", padx=5)
+
+        ctk.CTkLabel(frame, text="INSIRA SUA CHAVE VIP (SAPPHIRE ACCESS)", font=ctk.CTkFont("Segoe UI", 12, "bold"), text_color=C["text"]).pack(pady=(20, 5))
 
         key_entry = ctk.CTkEntry(frame, width=350, height=45, font=("Consolas", 15, "bold"), 
                                  placeholder_text="XXXX-XXXX-XXXX-XXXX", justify="center",
                                  fg_color="#050505", border_color=C["border"])
-        key_entry.pack(pady=15)
+        key_entry.pack(pady=10)
         key_entry.focus_set()
 
         def validate():
-            VIP_KEY = "APEX-VIPS-2026-X9"
             key = key_entry.get().strip().upper()
+            if not key: return
+
+            self.log(f"🔑 Verificando chave {key} via Supabase...", "info")
             
-            if key == VIP_KEY:
-                with open("license.bin", "w") as f: f.write("ACTIVATED")
+            # --- LOGICA SUPABASE (TO BE CONNECTED) ---
+            # Aqui faremos o POST para a sua tabela 'licenses'
+            # Por enquanto, mantemos a chave mestre para teste
+            MASTER_KEY = "APEX-VIPS-2026-X9"
+            
+            if key == MASTER_KEY:
+                with open("license.bin", "w") as f: f.write(f"ACTIVATED:{my_hwid}")
                 self.log("✅ ACESSO VIP AUTORIZADO!", "success")
                 gate.destroy()
+                self.state('zoomed')
                 self.deiconify()
             else:
-                import winsound
-                winsound.MessageBeep(winsound.MB_ICONHAND)
+                # Simulando verificação falha
                 key_entry.configure(border_color=C["red"])
-                self.log(">>> ACESSO NEGADO: CHAVE VIP INVÁLIDA.", "error")
+                self.log(">>> CHAVE INVÁLIDA OU HWID NÃO AUTORIZADO.", "error")
 
         btn_verify = ctk.CTkButton(frame, text="ATIVAR AGORA", font=ctk.CTkFont("Segoe UI", 12, "bold"),
                                    fg_color=C["cyan"], text_color="#000000", hover_color=C["accent"],
@@ -207,12 +260,24 @@ class PremiumKillprocessApp(ctk.CTk):
         
         # Esconde a janela principal para mostrar o Splash primeiro
         self.withdraw()
+        
+        # Ocultar o terminal via Boot Engine (FANTASMA MODE)
+        boot_engine.hide_console()
+        
         self.after(100, self.show_splash)
         
         self.setup_ui()
         
     def setup_ui(self):
         self.configure(fg_color=C["bg"])
+        
+        # Inicializar Fontes Primeiro (SAPPHIRE CORE)
+        self.fonts = get_fonts()
+        self.title_font = self.fonts["title"]
+        self.label_font = self.fonts["label"]
+        self.log_font = self.fonts["log"]
+        self.section_font = self.fonts["section"]
+        self.sub_font = self.fonts["sub"]
         
         # Configurar ícone da janela
         try:
@@ -296,11 +361,6 @@ class PremiumKillprocessApp(ctk.CTk):
             {"exe": "cyberpunk2077.exe", "name": "Cyberpunk 2077"}
         ]
         
-        self.title_font = ctk.CTkFont(family="Segoe UI", size=20, weight="bold")
-        self.label_font = ctk.CTkFont(family="Segoe UI", size=12)
-        self.log_font = ctk.CTkFont(family="Consolas", size=10)
-        self.section_font = ctk.CTkFont(family="Segoe UI", size=14, weight="bold")
-        self.sub_font = ctk.CTkFont(family="Segoe UI", size=12)
 
         self.load_whitelist()
         
@@ -353,51 +413,23 @@ class PremiumKillprocessApp(ctk.CTk):
         self.resizing_terminal = False
 
     def _build_topbar(self):
-        # Container Esquerdo (Logo + Switch)
+        # Container Esquerdo (Logo + Modo)
         left_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
-        left_container.pack(side="left", padx=20, fill="y")
+        left_container.pack(side="left", padx=(20, 0), fill="y")
 
         logo_lbl = ctk.CTkLabel(left_container, text="✨ FLUX OS ", font=ctk.CTkFont("Segoe UI", 16, "bold"), text_color=C["accent"])
-        logo_lbl.pack(side="left")
+        logo_lbl.pack(side="left", padx=(0, 130)) # Ajustado para 130px para alinhar perfeitamente com o fim da sidebar (220px total)
         
-        self.back_btn = ctk.CTkButton(left_container, text="⬅ VOLTAR", width=80, height=24, corner_radius=6,
-                                      fg_color="transparent", border_width=1, border_color=C["border"],
-                                      hover_color=C["hover"], font=("Segoe UI", 10, "bold"),
-                                      command=lambda: self.switch_tab("dashboard"))
-        self.back_btn.pack(side="left", padx=15)
-
-        sub_lbl = ctk.CTkLabel(left_container, text="APEX", font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["muted"])
-        sub_lbl.pack(side="left", padx=(0, 20), pady=(4,0))
-        
-        # Switch do Modo (Ajuste fino: afastando da margem do menu lateral)
+        # Switch do Modo (Alinhado com o grid principal)
         self.mode_pill = ctk.CTkLabel(left_container, text="● SIMULAÇÃO", font=ctk.CTkFont("Segoe UI", 10, "bold"),
                                       fg_color="#140A00", text_color=C["orange"], corner_radius=4, padx=10, pady=2)
-        self.mode_pill.pack(side="left", padx=(80, 5)) 
+        self.mode_pill.pack(side="left", padx=(10, 15)) 
         
         self.dry_run_switch = ctk.CTkSwitch(left_container, text="MODO REAL", command=self.toggle_dry_run, 
                                             font=ctk.CTkFont("Segoe UI", 10, "bold"), text_color=C["muted"],
                                             onvalue=True, offvalue=False) 
-        self.dry_run_switch.pack(side="left", padx=5)
+        self.dry_run_switch.pack(side="left", padx=15)
         self.dry_run_switch.deselect()
-
-        # --- MENU SUSPENSO (ESTILO VS CODE) ---
-        self.menu_container = ctk.CTkFrame(left_container, fg_color="transparent")
-        self.menu_container.pack(side="left", padx=(40, 0))
-
-        def create_dropdown(label, values):
-            menu = ctk.CTkOptionMenu(self.menu_container, values=[label] + values,
-                                     command=lambda v, l=label: self.handle_top_menu(l, v),
-                                     width=100, height=28, corner_radius=6,
-                                     font=ctk.CTkFont("Segoe UI", 10, "bold"),
-                                     fg_color=C["panel"], button_color=C["panel"],
-                                     button_hover_color=C["hover"], text_color="#E2E8F0")
-            menu.set(label)
-            menu.pack(side="left", padx=2)
-            return menu
-
-        self.sys_menu = create_dropdown("SISTEMA", ["Gerenciador", "Controle", "Ponto Restauro", "Info PC"])
-        self.tool_menu = create_dropdown("FERRAMENTAS", ["Flush DNS", "Resetar IP", "Limpar Temp", "Shell Mode"])
-        self.help_menu = create_dropdown("SUPORTE", ["Documentação", "Mestre Clientes", "Sobre"])
 
         # Central Audit Container (Inicia vazio)
         self.audit_top_container = ctk.CTkFrame(self.topbar, fg_color="transparent")
@@ -417,9 +449,7 @@ class PremiumKillprocessApp(ctk.CTk):
             fg_color="#1E2631", hover_color="#334155", font=("Segoe UI", 14, "bold"),
             text_color=C["muted"], command=self.check_for_updates)
         self.top_update_btn.pack(side="left", padx=5)
-        # Tooltip simulado (hover)
-        self.top_update_btn.bind("<Enter>", lambda e: self.log("ℹ️ Clique para buscar atualizações", "info"))
-
+        
         settings_btn = ctk.CTkButton(
             actions_frame, text="⚙️", width=30, height=30, corner_radius=15, 
             fg_color="#1E2631", hover_color="#334155", font=("Segoe UI", 16))
@@ -436,46 +466,36 @@ class PremiumKillprocessApp(ctk.CTk):
     def handle_top_menu(self, category, choice):
         if choice == category: return # Ignorar clique no label pai
         
-        self.log(f"⚡ [Menu {category}]: ACIONANDO {choice.upper()}...", "info")
+        self.log(f"⚡ [Ferramenta]: ACIONANDO {choice.upper()}...", "info")
         
-        # Dispatcher de ações
-        if category == "SISTEMA":
-            if choice == "Gerenciador": subprocess.Popen("taskmgr.exe")
-            elif choice == "Controle": subprocess.Popen("control.exe")
-            elif choice == "Ponto Restauro": self.create_restore_point()
-            elif choice == "Info PC": subprocess.Popen("msinfo32.exe")
-        
-        elif category == "FERRAMENTAS":
-            if choice == "Flush DNS": self.run_extra_optimization("flush_dns")
-            elif choice == "Resetar IP": utils.run_cmd("ipconfig /release; ipconfig /renew")
-            elif choice == "Limpar Temp": self.run_extra_optimization("clean_temp")
-            elif choice == "Shell Mode": self.switch_tab("shell")
-            
-        elif category == "SUPORTE":
-            if choice == "Documentação": self.log("ℹ️ Abrindo documentação no GitHub...", "info")
-            elif choice == "Mestre Clientes": self.log("ℹ️ Conectando ao suporte Mestre Clientes...", "info")
-            elif choice == "Sobre": 
-                from tkinter import messagebox
-                messagebox.showinfo("Sobre Flux OS", f"FLUX OS - Sapphire Edition\nVersão: {utils.VERSION}\nDesenvolvido por: Tiago FL Studio\n\nTodos os direitos reservados.")
-
-        # Resetar o label do menu após a seleção
-        if category == "SISTEMA": self.sys_menu.set("SISTEMA")
-        elif category == "FERRAMENTAS": self.tool_menu.set("FERRAMENTAS")
-        elif category == "SUPORTE": self.help_menu.set("SUPORTE")
+        # Dispatcher Unificado de Ferramentas
+        if choice == "Flush DNS": self.run_extra_optimization("flush_dns")
+        elif choice == "Resetar IP": utils.run_cmd("ipconfig /release; ipconfig /renew")
+        elif choice == "Limpar Temp": self.run_extra_optimization("clean_temp")
+        elif choice == "Limpar RAM": 
+            if not utils.DRY_RUN: utils.run_cmd("[System.GC]::Collect()")
+            self.log("🧠 Memória RAM otimizada via System.GC", "success")
+        elif choice == "Gerenciador": subprocess.Popen("taskmgr.exe")
+        elif choice == "Info PC": subprocess.Popen("msinfo32.exe")
+        elif choice == "Ponto Restauro": self.create_restore_point()
+        elif choice == "Shell Mode": self.switch_tab("shell")
 
     def change_resolution(self, choice):
+        if choice not in self.resolutions: return
         w, h = self.resolutions[choice]
         self.attributes("-fullscreen", False)
+        self.state("normal") # Forçar saída do modo maximizado para permitir redimensionamento
         self.geometry(f"{w}x{h}")
-        self.log(f">>> RESOLUÇÃO ALTERADA PARA {w}x{h}", "info")
+        self.update() # Forçar atualização visual do layout
+        self.log(f"🖥️ Resolução alterada para {w}x{h}", "success")
 
     def _build_sidebar(self):
         # Menu Principal - 5 Abas Essenciais
         self.nav_btns = {}
         
         def add_nav_btn(id, icon, text):
-            # Adicionando espaços no início do texto para afastar o ícone da borda
-            btn = ctk.CTkButton(self.sidebar_frame, text=f"      {icon}   {text}", anchor="w", 
+            # Usando espaços fixos para alinhamento (padx não é suportado no CTkButton)
+            btn = ctk.CTkButton(self.sidebar_frame, text=f"     {icon}   {text}", anchor="w", 
                                 fg_color="transparent", hover_color=C["hover"], text_color=C["muted"],
                                 font=ctk.CTkFont("Segoe UI", 12, "bold"), height=42, corner_radius=0,
                                 command=lambda k=id: self.switch_tab(k))
@@ -494,43 +514,27 @@ class PremiumKillprocessApp(ctk.CTk):
         add_nav_btn("extra", "🛠️", "MANUTENÇÃO")
         add_nav_btn("gpu", "🎮", "NVIDIA GPU")
         
-        # --- ÁREA DE ATALHOS RÁPIDOS (BANNERS RETANGULARES) ---
-        self.shortcut_container = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        self.shortcut_container.pack(fill="x", padx=10, pady=5)
-        
-        self.custom_shortcuts = []
-        self.render_shortcuts()
-
-        # Botão de Adicionar (+)
-        add_btn = ctk.CTkButton(self.sidebar_frame, text="+ ADICIONAR APP", width=180, height=32, corner_radius=6, 
-                                fg_color="transparent", border_width=1, border_color=C["border"],
-                                hover_color=C["hover"], font=("Segoe UI", 10, "bold"), 
-                                command=self.add_custom_shortcut)
-        add_btn.pack(pady=10)
-
-        # --- Versão no Rodapé ---
-        self.ver_lbl = ctk.CTkLabel(self.sidebar_frame, text=f"FLUX OS v{utils.VERSION}", 
-                               font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"])
-        self.ver_lbl.pack(side="bottom", pady=10)
-
-        # Botão de Update no rodapé da sidebar
-        self.update_btn = ctk.CTkButton(self.sidebar_frame, text="🔄 CHECK UPDATE", 
-                                   font=ctk.CTkFont("Segoe UI", 8, "bold"),
-                                   fg_color="transparent", border_width=1, border_color=C["border"],
-                                   height=20, corner_radius=4, text_color=C["muted"],
-                                   hover_color=C["card"], command=self.check_for_updates)
-        self.update_btn.pack(side="bottom", pady=(0, 2), padx=20, fill="x")
-
-        # Área de Rodapé: Ponto de Restauração
+        # --- Rodapé da Sidebar ---
         bottom_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
         bottom_frame.pack(side="bottom", fill="x", pady=20, padx=15)
-        
-        self.restore_btn = ctk.CTkButton(bottom_frame, text="🛡️ CRIAR PONTO DE RESTAURAÇÃO", 
-                                          font=ctk.CTkFont("Segoe UI", 9, "bold"),
+
+        self.update_btn = ctk.CTkButton(bottom_frame, text="🔄 VERIFICAR UPDATES", 
+                                   font=self.fonts["small_bold"],
+                                   fg_color="transparent", border_width=1, border_color=C["border"],
+                                   height=38, corner_radius=8, text_color=C["muted"],
+                                   hover_color=C["card"], command=self.check_for_updates)
+        self.update_btn.pack(fill="x", pady=(0, 10))
+
+        self.restore_btn = ctk.CTkButton(bottom_frame, text="🛡️ PONTO DE RESTAURO", 
+                                          font=self.fonts["small_bold"],
                                           fg_color="#064E3B", hover_color="#065F46", text_color="#10B981",
-                                          height=35, corner_radius=8, border_width=1, border_color="#10B981",
+                                          height=38, corner_radius=8, border_width=1, border_color="#10B981",
                                           command=self.create_restore_point)
         self.restore_btn.pack(fill="x")
+
+        self.ver_lbl = ctk.CTkLabel(bottom_frame, text=f"FLUX OS v{utils.VERSION}", 
+                               font=ctk.CTkFont("Segoe UI", 8), text_color=C["muted"])
+        self.ver_lbl.pack(pady=(10, 0))
 
     def _build_content(self):
         # Este é apenas o placeholder, as abas criam frames dentro dele.
@@ -592,17 +596,14 @@ class PremiumKillprocessApp(ctk.CTk):
         self.pending_clear = False
         self.clear_log_btn.configure(text_color=C["muted"])
 
-
-
-
-
-
-
-
-
-
-
-
+    def hide_console(self):
+        """ Esconde a janela do console (terminal) se ela existir. """
+        try:
+            hWnd = ctypes.windll.kernel32.GetConsoleWindow()
+            if hWnd:
+                ctypes.windll.user32.ShowWindow(hWnd, 0) # 0 = SW_HIDE
+        except:
+            pass
 
     def run_premium_optimization(self, cmd):
         if cmd == "power_plan":
@@ -1255,7 +1256,6 @@ del "%~f0"
         if utils.DRY_RUN:
             self.log(f"[SIMULAÇÃO] Executado comando: {cmd_text}")
         else:
-            # Check if cmd_text is a path or a direct file to start
             if os.path.exists(cmd_text):
                 subprocess.Popen(f'explorer.exe "{cmd_text}"', shell=True)
             else:
@@ -1268,9 +1268,6 @@ del "%~f0"
             self.log(f"[SIMULAÇÃO] Lançado jogo: {exe}")
         else:
             subprocess.Popen(exe, shell=True)
-
-
-
 
     def add_to_whitelist(self):
         process = self.wl_entry.get().strip().lower()
@@ -1320,14 +1317,49 @@ del "%~f0"
         except: pass
 
     def load_whitelist(self):
+        default_apps = [
+            "flux_os.exe", "gui.exe", "python.exe", "svchost.exe", "explorer.exe", 
+            "taskmgr.exe", "nvidia share.exe", "nvcontainer.exe", "discord.exe", 
+            "steam.exe", "steamwebhelper.exe", "epicgameslauncher.exe", 
+            "vanguard.exe", "vgc.exe", "msiafterburner.exe", "rtss.exe"
+        ]
         if not os.path.exists("whitelist.txt"):
-            # Whitelist padrão
-            return ["flux_os.exe", "gui.exe", "python.exe", "svchost.exe", "explorer.exe", "taskmgr.exe"]
+            return default_apps
         try:
             with open("whitelist.txt", "r", encoding="utf-8") as f:
-                return [l.strip().lower() for l in f.readlines() if l.strip()]
+                saved = [l.strip().lower() for l in f.readlines() if l.strip()]
+                return list(set(default_apps + saved))
         except:
-            return []
+            return default_apps
+
+    def auto_detect_whitelist(self):
+        """ Escaneia a máquina por programas instalados e processos ativos para sugerir proteção. """
+        self.log("\n🔍 [Auto-Detect]: Escaneando sistema por programas protegidos...", "info")
+        
+        found_apps = []
+        common_targets = [
+            "spotify.exe", "chrome.exe", "firefox.exe", "msedge.exe", "obs64.exe",
+            "battlenet.exe", "origin.exe", "uplay.exe", "lghub.exe", "razer central.exe"
+        ]
+        
+        for proc in psutil.process_iter(['name']):
+            try:
+                name = proc.info['name'].lower()
+                if name in common_targets and name not in self.whitelist:
+                    found_apps.append(name)
+            except: continue
+
+        if not found_apps:
+            self.log("✅ Whitelist já está atualizada com os processos ativos.", "success")
+            return
+
+        for app in found_apps:
+            self.whitelist.append(app)
+            self.log(f"🛡️ [Auto-Detect]: Detectado e protegido: {app}", "success")
+        
+        self.save_whitelist()
+        self.update_whitelist_ui()
+        self.log(f"✨ Total de {len(found_apps)} novos apps protegidos automaticamente.", "success")
 
     # =====================================================================
     # 🔄 Lógica de Navegação e Troca de Abas
@@ -1561,8 +1593,11 @@ del "%~f0"
         create_restore_point(self.log)
         backup_active_services(self.log)
         
-        levels = list(SERVICES_MAP.keys())[:7]
+        levels = list(SERVICES_MAP.keys())
         for idx, category in enumerate(levels, start=1):
+            if category in self.level_checkboxes_dashboard and not self.level_checkboxes_dashboard[category].get():
+                continue # Pula se o nível não estiver marcado
+
             self.log(f"\n⚡ Executando {category}...")
             items = SERVICES_MAP[category]
             for item in items:
@@ -1571,6 +1606,8 @@ del "%~f0"
                         stop_process(item["id"], self.log, self.whitelist)
                     elif item["type"] == "service":
                         stop_service(item["id"], self.log, self.whitelist)
+                    elif item["type"] == "gpu_tweak":
+                        self.handle_gpu_tweak_by_id(item["id"])
             self.light_up_level(idx)
 
         self.log("\n✅ Otimização Gamer Suprema concluída!")
@@ -1603,6 +1640,8 @@ del "%~f0"
                     stop_process(item["id"], self.log, self.whitelist)
                 elif item["type"] == "service":
                     stop_service(item["id"], self.log, self.whitelist)
+                elif item["type"] == "gpu_tweak":
+                    self.handle_gpu_tweak_by_id(item["id"])
             self.light_up_level(idx)
 
         self.log("\n✅ MODO DEUS ATIVADO COM SUCESSO EM TODOS OS 7 NÍVEIS!")
@@ -1623,6 +1662,8 @@ del "%~f0"
                             stop_process(item["id"], self.log, self.whitelist)
                         elif item["type"] == "service":
                             stop_service(item["id"], self.log, self.whitelist)
+                        elif item["type"] == "gpu_tweak":
+                            self.handle_gpu_tweak_by_id(item["id"])
                 self.light_up_level(idx)
             else:
                 self.log(f"\n⏭️ Pulando {category} (não selecionado).")
@@ -1675,6 +1716,46 @@ del "%~f0"
                 self.log(f"✅ Serviço {svc}: ELIMINADO", "success")
             self.log("✨ LIXO NVIDIA LIMPO COM SUCESSO.", "success")
         
+        threading.Thread(target=run, daemon=True).start()
+
+    def apply_gpu_tweak(self, mode):
+        if utils.DRY_RUN:
+            self.log(f"[SIMULAÇÃO] GPU Tweak aplicado: {mode}", "success")
+            return
+
+        def run():
+            try:
+                if mode == "latency":
+                    self.log("⚡ [GPU]: Ativando Modo de Latência ULTRA (Redução de Input Lag)...", "info")
+                    cmd = 'reg add "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak" /v "LowLatencyMode" /t REG_DWORD /d 2 /f'
+                    subprocess.run(cmd, shell=True, capture_output=True)
+                    self.log("✅ NVIDIA Low Latency: ULTRA ATIVADO", "success")
+                
+                elif mode == "shaders":
+                    self.log("📦 [GPU]: Configurando Shader Cache em 10GB (Fim dos Stutters)...", "info")
+                    cmd = 'reg add "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak" /v "ShaderCacheSize" /t REG_DWORD /d 10240 /f'
+                    subprocess.run(cmd, shell=True, capture_output=True)
+                    self.log("✅ NVIDIA Shader Cache: 10GB DEFINIDO", "success")
+
+                elif mode == "hags":
+                    self.log("🖥️ [GPU]: Ativando Hardware Accelerated GPU Scheduling (HAGS)...", "info")
+                    cmd = 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers" /v "HwSchMode" /t REG_DWORD /d 2 /f'
+                    subprocess.run(cmd, shell=True, capture_output=True)
+                    self.log("✅ Windows HAGS: ATIVADO (Reinicie para aplicar)", "warning")
+
+                elif mode == "restore":
+                    self.log("🔄 [GPU]: Restaurando configurações originais de fábrica...", "warning")
+                    cmds = [
+                        'reg add "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak" /v "LowLatencyMode" /t REG_DWORD /d 0 /f',
+                        'reg add "HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak" /v "ShaderCacheSize" /t REG_DWORD /d 4096 /f',
+                        'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers" /v "HwSchMode" /t REG_DWORD /d 1 /f'
+                    ]
+                    for c in cmds: subprocess.run(c, shell=True, capture_output=True)
+                    self.log("✅ GPU RESTAURADA: Configurações de fábrica aplicadas.", "success")
+
+            except Exception as e:
+                self.log(f"❌ Erro ao aplicar tweak {mode}: {e}", "error")
+
         threading.Thread(target=run, daemon=True).start()
 
     def apply_network_boost(self):
@@ -1788,52 +1869,13 @@ del "%~f0"
         # 1. Reativação Específica e Profunda do Windows Defender (PRIORIDADE MÁXIMA)
         self.log("🛡️ Realizando Deep Reset do Windows Defender e Interface de Segurança...", "info")
         
-        # Script consolidado para execução mais rápida e confiável
-        repair_script = """
-        $ErrorActionPreference = 'SilentlyContinue'
-        # Limpeza de Registro e Políticas
-        $regPaths = @(
-            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender',
-            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection',
-            'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet',
-            'HKLM:\\SOFTWARE\\Microsoft\\Windows Defender',
-            'HKLM:\\SOFTWARE\\Microsoft\\Windows Defender Security Center'
-        )
-        foreach ($path in $regPaths) {
-            if (Test-Path $path) {
-                Remove-ItemProperty -Path $path -Name 'DisableAntiSpyware' -Force
-                Remove-ItemProperty -Path $path -Name 'DisableAntiVirus' -Force
-                Remove-ItemProperty -Path $path -Name 'DisableRealtimeMonitoring' -Force
-                Remove-Item -Path $path -Recurse -Force
-            }
-        }
-        # Reset de Serviços via Kernel
-        $services = @{
-            'WinDefend' = 2; 'WdNisSvc' = 3; 'Sense' = 3; 'WdFilter' = 0; 
-            'WdBoot' = 0; 'SecurityHealthService' = 2; 'wscsvc' = 2; 'mpssvc' = 2; 'AppXSvc' = 2
-        }
-        foreach ($svc in $services.Keys) {
-            $s_path = \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\$svc\"
-            if (Test-Path $s_path) { Set-ItemProperty -Path $s_path -Name 'Start' -Value $services[$svc] -Force }
-        }
-        # Re-registrar Interface AppX
-        Get-AppxPackage -AllUsers -Name 'Microsoft.SecHealthUI' | Foreach {
-            Add-AppxPackage -DisableDevelopmentMode -Register \"$($_.InstallLocation)\\AppXManifest.xml\" -Force
-        }
-        # Reativar Monitoramento
-        Set-MpPreference -DisableRealtimeMonitoring $false
-        Set-MpPreference -DisableBehaviorMonitoring $false
-        gpupdate /force
-        """
-
         if not utils.DRY_RUN:
-            # Executa o script de reparo consolidado
-            subprocess.run(["powershell", "-Command", repair_script], capture_output=True, creationflags=0x08000000)
-            
-            # Tentar iniciar serviços críticos imediatamente
+            # Chama a função centralizada no utils.py
+            utils.deep_security_repair(self.log)
+            # Tentar iniciar serviços críticos imediatamente como redundância
             subprocess.run(["powershell", "-Command", "Start-Service WinDefend, SecurityHealthService -ErrorAction SilentlyContinue"], capture_output=True, creationflags=0x08000000)
         else:
-            self.log("🧪 [SIMULAÇÃO]: Deep Reset do Defender executado.", "warning")
+            self.log("🧪 [SIMULAÇÃO]: Deep Reset do Defender executado via Utils.", "warning")
 
         if security_only:
             self.log("\n✅ DEFENDER RESTAURADO: Bloqueios removidos e interface resetada.", "success")
@@ -1850,6 +1892,10 @@ del "%~f0"
                         try:
                             utils.run_cmd(f"Set-Service -Name '{item['id']}' -StartupType Automatic")
                         except: pass
+        
+        self.log("🟢 Restaurando padrões de hardware (GPU/NVIDIA)...", "info")
+        if not utils.DRY_RUN:
+            self.apply_gpu_tweak("restore")
         
         self.log("🟢 Reiniciando Explorer.exe para aplicar mudanças visuais...")
         if not utils.DRY_RUN:
@@ -2045,8 +2091,5 @@ def optimize_tcp(log_func):
 
 
 if __name__ == "__main__":
-    if not utils.is_admin():
-        print("[AVISO] Este script nao esta rodando como ADMINISTRADOR. Algumas funcoes reais podem nao funcionar.")
-        
     app = PremiumKillprocessApp()
     app.mainloop()

@@ -34,8 +34,18 @@ Este documento detalha as fases de desenvolvimento do projeto **Killprocess** pa
 
 ---
 
-## 📅 Fase 5: Testes, Homologação e Empacotamento (Finalização)
+## 📅 Fase 5: Testes, Homologação e Empacotamento (Concluída)
 - [x] Testes de estresse em jogos competitivos com o Modo Deus Ativo (Ex: CS2, Valorant).
 - [x] Empacotamento em um arquivo executável único (`.exe`) com manifesto exigindo permissões de Administrador. (CONCLUÍDO)
+
+---
+
+## 📅 Fase 6: Segurança & Ecossistema Sapphire (Em Andamento)
+- [x] **Reparo Profundo de Segurança:** Implementação do motor de restauração do Windows Defender e serviços de Kernel.
+- [x] **Interface Accordion:** Refatoração do Menu Técnico para um sistema de expansão lateral elegante e funcional.
+- [x] **Trava de Hardware (HWID):** Implementação de identificação única por máquina baseada em CPU e Motherboard.
+- [x] **Whitelist Inteligente:** Adição do motor de Auto-Detect para proteção proativa de aplicativos essenciais.
+- [ ] **Integração Supabase:** Conexão final com o banco de dados online para controle de chaves e expiração de licenças.
+- [ ] **Sistema de Auto-Update Automático:** Sincronização em tempo real via GitHub para distribuição de novos patches.
 
 

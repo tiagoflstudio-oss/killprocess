@@ -1,7 +1,7 @@
 {
   "version": "2.1.36",
-  "release_notes": "FLUX OS v2.1.28 SAPPHIRE - Auditoria Sênior concluída. Refatoração Thread-Safe, telemetria real de hardware (RAM em GB, Mb/s), Cockpit Panorâmico 100% e correção estrutural do vácuo horizontal.",
-  "date": "2026-05-06",
+  "release_notes": "FLUX OS v2.1.36 SAPPHIRE - Sistema de Recuperação Profunda do Windows Defender implementado. Correção de bloqueios de IT Admin e restauração de serviços de segurança pós-otimização N10.",
+  "date": "2026-05-08",
   "url": "https://github.com/tiagoflstudio-oss/Flux_OS/releases/latest/download/Flux_OS_Sapphire.exe",
-  "changelog": "Melhorias gerais e correções de estabilidade."
+  "changelog": "Novo módulo de Recuperação Profunda, reparo de GPO do Defender, dashboard unificado e melhorias de estabilidade na UI."
 }

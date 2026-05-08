@@ -75,7 +75,44 @@ class GPUTab(ctk.CTkScrollableFrame):
                                            height=40, command=self.app.apply_gpu_clean)
         self.gpu_clean_btn.pack(fill="x", padx=15, pady=(0, 10))
         
-        ctk.CTkLabel(clean_card, text="Desativa NvTelemetry, ShadowPlay e serviços de espionagem de dados.", 
-                     font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"], wraplength=300).pack(padx=15, pady=(0, 15))
+        ctk.CTkLabel(clean_card, text="Desativa NvTelemetry e ShadowPlay.", 
+                     font=ctk.CTkFont("Segoe UI", 9), text_color=C["muted"]).pack(padx=15, pady=(0, 15))
+
+        # NOVO CARD: ELITE GAMING TUNING
+        elite_card = ctk.CTkFrame(self, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=15)
+        elite_card.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(elite_card, text="▌ ELITE GAMING TUNING (CS2 / VALORANT)", font=self.fonts["small_bold"], text_color=C["accent"]).pack(anchor="w", padx=15, pady=(10, 10))
+        
+        btns_frame = ctk.CTkFrame(elite_card, fg_color="transparent")
+        btns_frame.pack(fill="x", padx=15, pady=(0, 15))
+        btns_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+        # Botão 1: Low Latency
+        self.latency_btn = ctk.CTkButton(btns_frame, text="⚡ LATÊNCIA ULTRA", 
+                                         fg_color="#7C3AED", hover_color="#8B5CF6", font=self.fonts["tab_btn"],
+                                         height=36, command=lambda: self.app.apply_gpu_tweak("latency"))
+        self.latency_btn.grid(row=0, column=0, padx=5, sticky="ew")
+
+        # Botão 2: Shader Cache
+        self.shader_btn = ctk.CTkButton(btns_frame, text="📦 SHADERS 10GB", 
+                                         fg_color="#3B82F6", hover_color="#60A5FA", font=self.fonts["tab_btn"],
+                                         height=36, command=lambda: self.app.apply_gpu_tweak("shaders"))
+        self.shader_btn.grid(row=0, column=1, padx=5, sticky="ew")
+
+        # Botão 3: HAGS
+        self.hags_btn = ctk.CTkButton(btns_frame, text="🖥️ ATIVAR HAGS", 
+                                         fg_color="#F59E0B", hover_color="#FBBF24", font=self.fonts["tab_btn"],
+                                         height=36, command=lambda: self.app.apply_gpu_tweak("hags"))
+        self.hags_btn.grid(row=0, column=2, padx=5, sticky="ew")
+
+        # BOTÃO DE SEGURANÇA: RESTAURAR PADRÕES
+        self.gpu_restore_btn = ctk.CTkButton(elite_card, text="🔄 RESTAURAR PADRÕES ORIGINAIS DA GPU", 
+                                         fg_color="#374151", hover_color="#4B5563", font=self.fonts["tab_btn"],
+                                         height=30, command=lambda: self.app.apply_gpu_tweak("restore"))
+        self.gpu_restore_btn.pack(fill="x", padx=15, pady=(0, 15))
+
+        ctk.CTkLabel(elite_card, text="Otimizações de registro de nível kernel para resposta instantânea do mouse e estabilidade de quadros.", 
+                     font=ctk.CTkFont(family="Segoe UI", size=9, slant="italic"), text_color=C["muted"]).pack(pady=(0, 10))
 
 

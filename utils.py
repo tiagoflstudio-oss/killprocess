@@ -86,14 +86,25 @@ def deep_security_repair(log_callback=None):
     }
 
     # Resetar serviços via registro
-    $services = @{'WinDefend'=2; 'SecurityHealthService'=2; 'wscsvc'=2; 'mpssvc'=2}
+    $services = @{
+        'WinDefend' = 2; 
+        'SecurityHealthService' = 2; 
+        'wscsvc' = 2; 
+        'mpssvc' = 2;
+        'WdNisSvc' = 3;
+        'Sense' = 3;
+        'WdFilter' = 0;
+        'WdBoot' = 0
+    }
     foreach ($svc in $services.Keys) {
-        $p = 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\$svc'
-        if (Test-Path $p) { Set-ItemProperty -Path $p -Name 'Start' -Value $services[$svc] -Force }
+        $p = "HKLM:\SYSTEM\CurrentControlSet\Services\$svc"
+        if (Test-Path $p) { 
+            Set-ItemProperty -Path $p -Name 'Start' -Value $services[$svc] -Force 
+        }
     }
 
     # Re-registrar UI (SecHealthUI)
-    Get-AppxPackage -AllUsers -Name Microsoft.SecHealthUI | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\\AppXManifest.xml" -Force}
+    Get-AppXPackage -AllUsers -Name Microsoft.SecHealthUI | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml" -Force}
 
     # Forçar atualização de políticas
     gpupdate /force
@@ -106,3 +117,26 @@ def deep_security_repair(log_callback=None):
         log_callback("ℹ️ Se a janela não abrir, reinicie o PC para aplicar as mudanças de Kernel.", "warning")
     
     return True
+
+def get_hwid():
+    """ Gera uma identidade única (HWID) baseada no hardware da máquina. """
+    try:
+        # Obter Serial da Placa Mãe
+        mb_serial = subprocess.run(
+            ["powershell", "-Command", "Get-WmiObject win32_baseboard | Select-Object -ExpandProperty SerialNumber"],
+            capture_output=True, text=True, creationflags=0x08000000
+        ).stdout.strip()
+        
+        # Obter ID do Processador
+        cpu_id = subprocess.run(
+            ["powershell", "-Command", "Get-WmiObject win32_processor | Select-Object -ExpandProperty ProcessorId"],
+            capture_output=True, text=True, creationflags=0x08000000
+        ).stdout.strip()
+        
+        # Combinar e gerar Hash
+        raw_id = f"FLUX-{mb_serial}-{cpu_id}"
+        import hashlib
+        hwid = hashlib.sha256(raw_id.encode()).hexdigest().upper()[:24]
+        return hwid
+    except:
+        return "UNKNOWN-HWID-ERROR"

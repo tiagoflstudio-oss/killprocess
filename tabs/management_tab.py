@@ -40,11 +40,11 @@ class ManagementTab(ctk.CTkFrame):
             {"id": "Nível 3: Telemetria & Rastreamento", "title": "🟠 Nível 3", "subtitle": "Telemetria & Rastr.", "row": 1, "col": 0},
             {"id": "Nível 4: Xbox & Conexões Secundárias", "title": "🔴 Nível 4", "subtitle": "Xbox & Conexões", "row": 1, "col": 1},
             {"id": "Nível 5: Redes & Streaming", "title": "🌐 Nível 5", "subtitle": "Redes & Streaming", "row": 2, "col": 0},
-            {"id": "Nível 6: Segurança & Criptografia", "title": "🔒 Nível 6", "subtitle": "Segur. & Cripto.", "row": 2, "col": 1},
-            {"id": "Nível 7: Modo Deus (God Mode)", "title": "👑 Modo Deus", "subtitle": "God Mode Supremo", "row": 3, "col": 0},
-            {"id": "Nível 8: Gaming Polish (Ultra Seguro)", "title": "✨ Nível 8", "subtitle": "Gaming Polish", "row": 3, "col": 1},
-            {"id": "Nível 9: Deep Gaming Engine (System)", "title": "⚙️ Nível 9", "subtitle": "Deep Engine", "row": 4, "col": 0},
-            {"id": "Nível 10: Security & Defense Off (Agressivo)", "title": "🛡️ Nível 10", "subtitle": "Security OFF", "row": 4, "col": 1}
+            {"id": "Nível 6: Segurança & Biometria", "title": "🔒 Nível 6", "subtitle": "Segur. & Biometria", "row": 2, "col": 1},
+            {"id": "Nível 7: God Mode (Extreme)", "title": "👑 Modo Deus", "subtitle": "God Mode Supremo", "row": 3, "col": 0},
+            {"id": "Nível 8: Polish (Serviços Fantasmas)", "title": "✨ Nível 8", "subtitle": "Gaming Polish", "row": 3, "col": 1},
+            {"id": "Nível 9: Engine (Núcleo)", "title": "⚙️ Nível 9", "subtitle": "Deep Engine", "row": 4, "col": 0},
+            {"id": "Nível 10: NVIDIA GPU Elite", "title": "💎 Nível 10", "subtitle": "NVIDIA GPU Elite", "row": 4, "col": 1}
         ]
 
         for c in level_cards_data:

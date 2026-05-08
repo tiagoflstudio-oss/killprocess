@@ -56,9 +56,17 @@ Como a barra de tarefas do Windows some ao fechar o Explorer, o Killprocess forn
 
 ---
 
-## 📅 Próximos Passos de Desenvolvimento
+## 📅 Cronograma de Conclusão
 
-1. **Revisar a UI/UX** de `gui.py` para abrir espaço para o novo painel do shell no topo ou como uma nova aba principal.
-2. **Adicionar o botão dourado** no topo da barra de navegação ou sidebar.
-3. **Integrar os novos componentes** de ferramentas gamers (Volume, Relógio, Pesquisa de Comandos).
-4. **Efetuar testes locais** para validar que o fechamento do Explorer funciona em conjunto com o Killprocess atuando como shell.
+- [x] **Revisar a UI/UX:** Implementação da aba Shell e organização da sidebar em acordeão.
+- [x] **Adicionar o botão dourado:** Implementado como o toggle de Explorer no Dashboard e Modo Deus.
+- [x] **Integrar os novos componentes:** Volume, Relógio e Pesquisa de Comandos totalmente operacionais na aba Shell.
+- [x] **Efetuar testes locais:** Validação do funcionamento do Flux OS como shell principal concluída com sucesso.
+
+---
+
+## 🛡️ Fase Final: Blindagem de Negócios (Próximo Passo)
+O foco agora é garantir que o Flux OS seja um produto comercializável e seguro:
+1. **Trava de Licença:** Implementar a verificação de chaves VIP via Supabase.
+2. **Hardware Locking:** Vincular cada licença ao HWID (Device ID) único gerado pelo hardware.
+3. **Painel de Administração:** Configurar a tabela de controle remoto para liberação e suspensão de acesso de clientes.

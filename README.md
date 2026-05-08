@@ -1,55 +1,41 @@
-# 🚀 FLUX OS - Otimizador Supremo do Windows para Gamers
+# 💎 FLUX OS - Sapphire Edition
 
-O **FLUX OS** é um aplicativo projetado para desativar serviços e processos em segundo plano do Windows, liberando o máximo de CPU, Memória RAM e reduzindo a latência para jogos.
+O **FLUX OS** evoluiu de um simples otimizador para um **Mini-Shell Gamer de Alta Performance**. Ele permite desativar profundamente serviços do Windows, assumir o controle do sistema como um Shell (substituindo o Explorer) e garantir que 100% dos recursos do seu hardware sejam entregues ao jogo.
 
 ---
 
-## 🎚️ Níveis de Otimização (7 Níveis Completos)
+## 🚀 Funcionalidades Elite
+- **10 Níveis de Otimização:** Do básico ao agressivo (Security Off).
+- **Deep Security Repair:** Motor de restauração profunda para o Windows Defender e políticas de TI.
+- **Trava de Hardware (HWID):** Sistema de licenciamento vinculado à máquina do cliente via Supabase.
+- **Modo Shell Gamer:** Interface funcional com Relógio, Volume e Launcher de Apps mesmo com o `explorer.exe` fechado.
+- **Whitelist Inteligente:** Auto-detecção de programas essenciais para evitar fechamentos acidentais.
+- **Interface Accordion:** Sidebar moderna e limpa para navegação rápida.
 
-O sistema de otimização foi expandido para **7 níveis**, permitindo que o usuário escolha a agressividade com que os processos serão encerrados.
+---
 
-### 🟢 Nível 1: Aplicativos & Bloatwares
-Focado em fechar softwares em segundo plano que consumem RAM e CPU.
-- **Exemplos:** Google Chrome, MS Edge, Discord, OneDrive, WhatsApp, Teams, Skype.
+## 🎚️ Níveis de Otimização (10 Níveis)
 
-### 🟡 Nível 2: Impressão & Manutenção
-Desativa serviços que consomem recursos de I/O em segundo plano.
-- **Exemplos:** Spooler de impressão, Windows Search (Indexador), SysMain (Superfetch), Hyper-V.
-
-### 🟠 Nível 3: Telemetria & Rastreamento
-Desativa rastreamento, envio de dados de diagnóstico e manutenção de índice.
-- **Exemplos:** DiagTrack (Telemetria Microsoft), PimIndexMaintenanceSvc, UserDataSvc.
-
-### 🔴 Nível 4: Xbox & Conexões Secundárias
-Focado em serviços de console e periféricos que gamers de PC competitivos não utilizam.
-- **Exemplos:** Autenticação do Xbox Live, Xbox Game Save, Bluetooth, NFC, Telefonia e Sensores.
-
-### 🌐 Nível 5: Redes & Streaming
-Impede o consumo de rede e banda em segundo plano para máxima estabilidade e menor ping nos jogos.
-- **Exemplos:** Compartilhamento de Internet (ICS), Geolocalização, Mapas Baixados, Controles dos Pais, Modo Demonstração de Varejo.
-
-### 🔒 Nível 6: Segurança & Criptografia
-Para jogadores hardcore que querem máxima performance na CPU.
-- **Exemplos:** Gerenciador de Credenciais, Cartão Inteligente, Windows Insider Service, Registro Remoto, Biometria.
-
-### 👑 Nível 7: Modo Deus (God Mode)
-O nível supremo de otimização barebone.
-- **Ações:** Força a seleção de absolutamente todas as checkboxes da interface visual e desativa unconditionally todos os processos e serviços mapeados no programa.
+1. **Aplicativos & Bloatwares:** Chrome, Discord, Spotify, etc.
+2. **Impressão & Manutenção:** Spooler, Indexador, SysMain.
+3. **Telemetria & Rastreamento:** DiagTrack e coleta de dados.
+4. **Xbox & Conexões:** Bluetooth, NFC e serviços Xbox.
+5. **Redes & Streaming:** Geolocalização e mapas.
+6. **Segurança & Biometria:** Credenciais e biometria facial.
+7. **Modo Deus (Extreme):** Encerramento irrestrito de processos de Shell.
+8. **Gaming Polish:** Limpeza de serviços "fantasmas" de backup e defrag.
+9. **Engine (Núcleo):** Ajustes de kernel e energia.
+10. **Security (AVISO!):** Desativação total dos motores do Windows Defender.
 
 ---
 
 ## 🛠️ Desenvolvimento e Build
 
-Para gerar uma nova versão do executável (`.exe`) de forma automatizada, utilize o script de build incluído:
-
 1.  Certifique-se de ter o Python instalado.
-2.  Instale as dependências (se necessário): `pip install -r requirements.txt`
-3.  Execute o script de build:
-    ```bash
-    python build.py
-    ```
-4.  O executável final será gerado na pasta `dist/` com o nome **Flux_OS_Sapphire.exe**.
+2.  Instale as dependências: `pip install -r requirements.txt`
+3.  Execute o script de build: `python build.py`
+4.  O executável final estará em `dist/Flux_OS_Sapphire.exe`.
 
 > [!IMPORTANT]
-> O executável gerado solicitará automaticamente privilégios de Administrador ao ser iniciado, garantindo que todas as otimizações de Kernel e Registro funcionem corretamente.
+> O Flux OS exige privilégios de Administrador para interagir com serviços de Kernel e Registro.
 

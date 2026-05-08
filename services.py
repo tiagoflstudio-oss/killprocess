@@ -95,9 +95,11 @@ SERVICES_MAP = {
         {"id": "DcomLaunch", "name": "Iniciador de Processos DCOM", "type": "service", "checked": False},
         {"id": "RpcSs", "name": "Chamada de Procedimento Remoto", "type": "service", "checked": False}
     ],
-    "Nível 10: Security (AVISO!)": [
-        {"id": "WinDefend", "name": "Windows Defender Antivírus", "type": "service", "checked": True},
-        {"id": "WdNisSvc", "name": "Inspeção de Rede do Defender", "type": "service", "checked": True},
-        {"id": "Sense", "name": "Proteção Avançada contra Ameaças", "type": "service", "checked": True}
+    "Nível 10: NVIDIA GPU Elite": [
+        {"id": "gpu_latency", "name": "Latência Ultra (Kernel Response)", "type": "gpu_tweak", "checked": True},
+        {"id": "gpu_shaders", "name": "Shader Cache 10GB (Fim dos Stutters)", "type": "gpu_tweak", "checked": True},
+        {"id": "gpu_clean", "name": "Limpeza de Telemetria NVIDIA", "type": "gpu_tweak", "checked": True},
+        {"id": "gpu_hags", "name": "Hardware GPU Scheduling (HAGS)", "type": "gpu_tweak", "checked": True},
+        {"id": "gpu_unleashed", "name": "GPU Unleashed (Max Performance)", "type": "gpu_tweak", "checked": True}
     ]
 }

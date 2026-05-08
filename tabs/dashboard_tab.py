@@ -61,7 +61,7 @@ class DashboardTab(ctk.CTkScrollableFrame):
             (7, "N7", "God Mode", "#FFD700", "Modo Deus: Performance Gamer."),
             (8, "N8", "Polish", "#00FF88", "Polish: Serviços fantasmas."),
             (9, "N9", "Engine", "#C084FC", "Deep Engine: Otimização de núcleo."),
-            (10, "N10", "Security", "#EF4444", "⚠️ AVISO: Desativa Defender.")
+            (10, "N10", "GPU Elite", "#00FFFF", "Otimização máxima de latência e hardware NVIDIA.")
         ]
         
         row_idx = 0
@@ -72,7 +72,7 @@ class DashboardTab(ctk.CTkScrollableFrame):
             cb = ctk.CTkCheckBox(f, text=name, font=ctk.CTkFont("Segoe UI", 9, "bold"),
                                   fg_color=color, hover_color=color, width=16,
                                   command=lambda d=desc: update_desc(d))
-            if num <= 8: cb.select()
+            if num <= 10: cb.select()
             cb.pack(side="left", padx=(0, 2))
             cb.bind("<Enter>", lambda e, d=desc: update_desc(d))
             
@@ -102,8 +102,8 @@ class DashboardTab(ctk.CTkScrollableFrame):
             lbl = ctk.CTkLabel(card, text="--", font=self.fonts["stat_val"], text_color=C["text"])
             lbl.pack(anchor="w", padx=10)
             setattr(self.app, attr, lbl)
-            pb = ctk.CTkProgressBar(card, height=4, progress_color=color, fg_color="#1E2631")
-            pb.pack(fill="x", padx=10, pady=(0, 6))
+            pb = ctk.CTkProgressBar(card, height=10, progress_color=color, fg_color="#1E2631", corner_radius=5)
+            pb.pack(fill="x", padx=10, pady=(0, 10))
             pb.set(0.2)
             setattr(self.app, attr + "_pb", pb)
 
@@ -169,17 +169,25 @@ class DashboardTab(ctk.CTkScrollableFrame):
             command=self.app.toggle_gold_mode_explorer)
         self.app.btn_shell_dash.grid(row=0, column=2, padx=3, sticky="nsew")
 
-        self.restore_security_btn = ctk.CTkButton(
-            act, text="🛡️  REATIVAR WINDOWS DEFENDER", fg_color="#1E1B4B", hover_color="#3730A3",
-            border_width=1, border_color="#4338CA", font=self.fonts["small_bold"], height=35, corner_radius=6,
-            text_color="#E2E8F0", command=lambda: self.app.start_restoration(security_only=True))
-        self.restore_security_btn.pack(fill="x", padx=14, pady=(2, 5))
-
-        self.app.restore_btn = ctk.CTkButton(
-            act, text="🔄  RESTAURAR TODOS OS PADRÕES DO SISTEMA", fg_color="#0F172A", hover_color="#EF4444",
-            border_width=1, border_color="#1E293B", font=self.fonts["small_bold"], height=35, corner_radius=6,
-            text_color=C["muted"], command=self.app.start_restoration)
         self.app.restore_btn.pack(fill="x", padx=14, pady=(2, 10))
+
+        # --- BARRA DE MANUTENÇÃO RÁPIDA (RESTAURADA) ---
+        maint_row = ctk.CTkFrame(act, fg_color="transparent")
+        maint_row.pack(fill="x", padx=10, pady=(0, 10))
+        maint_row.grid_columnconfigure((0, 1, 2, 3), weight=1)
+
+        def add_quick_maint(text, cmd, col):
+            btn = ctk.CTkButton(
+                maint_row, text=text, fg_color="#14191F", hover_color=C["hover"],
+                border_width=1, border_color=C["border"], font=self.fonts["small_bold"],
+                height=35, corner_radius=6, text_color=C["muted"],
+                command=lambda: self.app.handle_top_menu("FERRAMENTAS", cmd))
+            btn.grid(row=0, column=col, padx=2, sticky="nsew")
+
+        add_quick_maint("FLUSH DNS", "Flush DNS", 0)
+        add_quick_maint("RESETAR IP", "Resetar IP", 1)
+        add_quick_maint("LIMPAR TEMP", "Limpar Temp", 2)
+        add_quick_maint("LIMPAR RAM", "Limpar RAM", 3)
 
         radar_card = ctk.CTkFrame(row3, fg_color=C["card"], border_width=1, border_color=C["border"], corner_radius=10)
         radar_card.grid(row=0, column=1, sticky="nsew")
