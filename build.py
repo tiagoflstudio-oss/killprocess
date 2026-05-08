@@ -25,8 +25,7 @@ def build():
         if os.path.exists(folder):
             shutil.rmtree(folder)
     
-    if os.path.exists(f"{exe_name}.spec"):
-        os.remove(f"{exe_name}.spec")
+    # O .spec deve ser preservado pois contem as configuracoes Sapphire
 
     # Caminho dos assets
     assets_path = "assets"
@@ -47,19 +46,26 @@ def build():
         except Exception as e:
             print(f" ⚠️ Erro ao converter ícone: {e}")
 
-    # Comando de Build
-    cmd = [
-        sys.executable, "-m", "PyInstaller",
-        "--noconsole",
-        "--onefile",
-        f"--name={exe_name}",
-        f"--icon={icon_ico}" if os.path.exists(icon_ico) else "",
-        f"--add-data={assets_path};assets",
-        f"--add-data=version.json;.",
-        "--uac-admin",
-        "--clean",
-        main_script
-    ]
+    # Comando de Build - Priorizar o arquivo .spec para garantir consistência
+    spec_file = f"{exe_name}.spec"
+    if os.path.exists(spec_file):
+        print(f" [INFO] Usando arquivo de especificacao Sapphire: {spec_file}")
+        cmd = [sys.executable, "-m", "PyInstaller", "--clean", spec_file]
+    else:
+        print(f" [AVISO] Spec nao encontrado, usando fallback via linha de comando...")
+        cmd = [
+            sys.executable, "-m", "PyInstaller",
+            "--noconsole",
+            "--onefile",
+            f"--name={exe_name}",
+            f"--icon={icon_ico}" if os.path.exists(icon_ico) else "",
+            f"--add-data={assets_path};assets",
+            f"--add-data=tabs;tabs", # Incluindo Abas no fallback
+            f"--add-data=version.json;.",
+            "--uac-admin",
+            "--clean",
+            main_script
+        ]
     # Filtrar argumentos vazios (caso o ícone não exista)
     cmd = [arg for arg in cmd if arg]
 
